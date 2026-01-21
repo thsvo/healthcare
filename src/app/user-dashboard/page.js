@@ -34,6 +34,54 @@ export default function UserDashboardPage() {
     router.push("/login");
   };
 
+  // Password change state
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState({ type: "", text: "" });
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordMessage({ type: "", text: "" });
+    
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage({ type: "error", text: "New passwords do not match" });
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      setPasswordMessage({ type: "error", text: "Password must be at least 6 characters" });
+      return;
+    }
+    
+    setSavingPassword(true);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        setPasswordMessage({ type: "success", text: "Password updated successfully!" });
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setShowPasswordForm(false);
+      } else {
+        setPasswordMessage({ type: "error", text: data.error });
+      }
+    } catch (error) {
+      setPasswordMessage({ type: "error", text: "Failed to update password" });
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
   const [uploading, setUploading] = useState(false);
 
   const handleFileUpload = async (e) => {
@@ -116,7 +164,7 @@ export default function UserDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="flex items-center justify-center h-64">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -127,25 +175,9 @@ export default function UserDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-100">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <h1 className="font-serif text-2xl font-bold text-secondary">
-            My Account<span className="text-primary">.</span>
-          </h1>
-          <button
-            onClick={handleLogout}
-            className="text-sm text-gray-600 hover:text-gray-900"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
-
-      <main className="max-w-5xl mx-auto px-6 py-12">
-        {/* Welcome */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-8">
+    <div className="space-y-6">
+      {/* Welcome */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
           <h2 className="text-2xl font-bold text-secondary mb-2">
             Welcome, {user.firstName}!
           </h2>
@@ -266,8 +298,99 @@ export default function UserDashboardPage() {
           </div>
         </div>
 
+        {/* Change Password Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mt-8">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-secondary">Account Security</h3>
+            {!showPasswordForm && (
+              <button
+                onClick={() => setShowPasswordForm(true)}
+                className="text-primary hover:text-primary/80 text-sm font-medium"
+              >
+                Change Password
+              </button>
+            )}
+          </div>
+          
+          {showPasswordForm ? (
+            <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
+              {passwordMessage.text && (
+                <div className={`p-3 rounded-lg text-sm ${
+                  passwordMessage.type === "error" 
+                    ? "bg-red-50 text-red-700 border border-red-200" 
+                    : "bg-green-50 text-green-700 border border-green-200"
+                }`}>
+                  {passwordMessage.text}
+                </div>
+              )}
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  required
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setShowPasswordForm(false); setPasswordMessage({ type: "", text: "" }); }}
+                  className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingPassword}
+                  className="flex-1 px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {savingPassword ? "Updating..." : "Update Password"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <p className="text-gray-500 text-sm">
+              Keep your account secure by using a strong password.
+            </p>
+          )}
+        </div>
+
         {/* Status */}
-        <div className="mt-8 text-center">
+        <div className="text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-full text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
               <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 16 0Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
@@ -278,7 +401,6 @@ export default function UserDashboardPage() {
             We'll be in touch with you soon.
           </p>
         </div>
-      </main>
     </div>
   );
 }
