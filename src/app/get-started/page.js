@@ -1,15 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
 export default function GetStartedPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const serviceId = searchParams.get('service');
+  
   const [step, setStep] = useState("intro"); // intro, info, shipping, survey, completion, submitting
   const [questions, setQuestions] = useState([]);
+  const [serviceName, setServiceName] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   
   // User Info State
@@ -34,7 +38,10 @@ export default function GetStartedPage() {
 
   useEffect(() => {
     fetchQuestions();
-  }, []);
+    if (serviceId) {
+      fetchServiceName();
+    }
+  }, [serviceId]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -53,13 +60,28 @@ export default function GetStartedPage() {
 
   const fetchQuestions = async () => {
     try {
-      const res = await fetch("/api/survey/questions");
+      const url = serviceId 
+        ? `/api/survey/questions?serviceId=${serviceId}`
+        : "/api/survey/questions";
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
         setQuestions(data.data);
       }
     } catch (error) {
       console.error("Failed to fetch questions", error);
+    }
+  };
+
+  const fetchServiceName = async () => {
+    try {
+      const res = await fetch(`/api/services/${serviceId}`);
+      const data = await res.json();
+      if (data.success) {
+        setServiceName(data.data.name);
+      }
+    } catch (error) {
+      console.error("Failed to fetch service", error);
     }
   };
 

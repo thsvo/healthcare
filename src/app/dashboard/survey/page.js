@@ -5,9 +5,11 @@ import { useState, useEffect } from "react";
 export default function SurveyPage() {
   const [questions, setQuestions] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
+  const [filterService, setFilterService] = useState("");
   const [formData, setFormData] = useState({
     questionText: "",
     type: "text",
@@ -15,6 +17,7 @@ export default function SurveyPage() {
     required: false,
     order: 0,
     categoryId: "",
+    serviceId: "",
   });
 
   useEffect(() => {
@@ -23,16 +26,19 @@ export default function SurveyPage() {
 
   const fetchData = async () => {
     try {
-      const [questionsRes, categoriesRes] = await Promise.all([
+      const [questionsRes, categoriesRes, servicesRes] = await Promise.all([
         fetch("/api/survey/questions"),
         fetch("/api/categories"),
+        fetch("/api/services"),
       ]);
       
       const questionsData = await questionsRes.json();
       const categoriesData = await categoriesRes.json();
+      const servicesData = await servicesRes.json();
       
       if (questionsData.success) setQuestions(questionsData.data);
       if (categoriesData.success) setCategories(categoriesData.data);
+      if (servicesData.success) setServices(servicesData.data);
     } catch (error) {
       console.error("Failed to fetch data:", error);
     } finally {
@@ -49,9 +55,10 @@ export default function SurveyPage() {
     
     const method = editingQuestion ? "PUT" : "POST";
     
-    // Don't send empty categoryId
+    // Don't send empty IDs
     const submitData = { ...formData };
     if (!submitData.categoryId) delete submitData.categoryId;
+    if (!submitData.serviceId) delete submitData.serviceId;
     
     try {
       const res = await fetch(url, {
@@ -97,6 +104,7 @@ export default function SurveyPage() {
         required: question.required,
         order: question.order,
         categoryId: question.categoryId || "",
+        serviceId: question.serviceId || "",
       });
     } else {
       setEditingQuestion(null);
@@ -107,6 +115,7 @@ export default function SurveyPage() {
         required: false,
         order: questions.length,
         categoryId: "",
+        serviceId: filterService || "",
       });
     }
     setShowModal(true);
@@ -122,6 +131,7 @@ export default function SurveyPage() {
       required: false,
       order: 0,
       categoryId: "",
+      serviceId: "",
     });
   };
 
@@ -142,8 +152,18 @@ export default function SurveyPage() {
 
   const getCategoryName = (categoryId) => {
     const category = categories.find(c => c._id === categoryId);
-    return category ? category.name : "Uncategorized";
+    return category ? category.name : "—";
   };
+
+  const getServiceName = (serviceId) => {
+    const service = services.find(s => s._id === serviceId);
+    return service ? service.name : "Global";
+  };
+
+  // Filter questions by service
+  const filteredQuestions = filterService
+    ? questions.filter(q => q.serviceId === filterService)
+    : questions;
 
   if (loading) {
     return (
@@ -172,15 +192,41 @@ export default function SurveyPage() {
         </button>
       </div>
 
+      {/* Service Filter */}
+      <div className="bg-white p-4 rounded-lg border border-gray-100">
+        <div className="flex items-center gap-4">
+          <label className="text-sm font-medium text-gray-700">Filter by Service:</label>
+          <select
+            value={filterService}
+            onChange={(e) => setFilterService(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+          >
+            <option value="">All Questions</option>
+            {services.map((service) => (
+              <option key={service._id} value={service._id}>{service.name}</option>
+            ))}
+          </select>
+          {filterService && (
+            <span className="text-sm text-gray-500">
+              Showing {filteredQuestions.length} question(s) for this service
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* Questions List */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        {questions.length === 0 ? (
+        {filteredQuestions.length === 0 ? (
           <div className="p-12 text-center">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-16 h-16 mx-auto text-gray-300 mb-4">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
             </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-1">No questions yet</h3>
-            <p className="text-gray-500 mb-4">Get started by adding your first survey question.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">
+              {filterService ? "No questions for this service" : "No questions yet"}
+            </h3>
+            <p className="text-gray-500 mb-4">
+              {filterService ? "Add questions to this service." : "Get started by adding your first survey question."}
+            </p>
             <button
               onClick={() => openModal()}
               className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
@@ -194,6 +240,7 @@ export default function SurveyPage() {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Question</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Required</th>
@@ -201,11 +248,20 @@ export default function SurveyPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {questions.sort((a, b) => a.order - b.order).map((question) => (
+              {filteredQuestions.sort((a, b) => a.order - b.order).map((question) => (
                 <tr key={question._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{question.order}</td>
                   <td className="px-6 py-4">
                     <p className="text-sm font-medium text-gray-900 truncate max-w-md">{question.questionText}</p>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      question.serviceId 
+                        ? 'bg-purple-100 text-purple-700' 
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {getServiceName(question.serviceId)}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
@@ -256,6 +312,24 @@ export default function SurveyPage() {
             </div>
             
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {/* Service */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Service *</label>
+                <select
+                  value={formData.serviceId}
+                  onChange={(e) => setFormData({ ...formData, serviceId: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                >
+                  <option value="">-- Global (All Services) --</option>
+                  {services.map((service) => (
+                    <option key={service._id} value={service._id}>{service.name}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Select which service this question belongs to
+                </p>
+              </div>
+
               {/* Category */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
