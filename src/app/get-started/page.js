@@ -11,10 +11,11 @@ export default function GetStartedPage() {
   const searchParams = useSearchParams();
   const serviceId = searchParams.get('service');
   
-  const [step, setStep] = useState("intro"); // intro, info, shipping, survey, completion, submitting
+  const [step, setStep] = useState("loading"); // loading, intro, info, shipping, survey, completion, submitting
   const [questions, setQuestions] = useState([]);
   const [serviceName, setServiceName] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [loggedInUser, setLoggedInUser] = useState(null);
   
   // User Info State
   const [userInfo, setUserInfo] = useState({
@@ -37,11 +38,48 @@ export default function GetStartedPage() {
   const [answers, setAnswers] = useState({});
 
   useEffect(() => {
-    fetchQuestions();
-    if (serviceId) {
-      fetchServiceName();
-    }
+    checkLoginAndFetch();
   }, [serviceId]);
+
+  const checkLoginAndFetch = async () => {
+    // Check if user is logged in
+    try {
+      const res = await fetch("/api/auth/me");
+      const data = await res.json();
+      if (data.success && data.data) {
+        setLoggedInUser(data.data);
+        // Set user info from logged in user
+        setUserInfo(prev => ({
+          ...prev,
+          firstName: data.data.firstName || "",
+          lastName: data.data.lastName || "",
+          email: data.data.email || "",
+          phone: data.data.phone || "",
+          birthday: data.data.birthday ? new Date(data.data.birthday).toISOString().split('T')[0] : "",
+          sex: data.data.sex || "",
+          company: data.data.company || "",
+          address: data.data.address || "",
+          addressLine2: data.data.addressLine2 || "",
+          city: data.data.city || "",
+          state: data.data.state || "",
+          zipCode: data.data.zipCode || "",
+          termsAccepted: true, // Already accepted when they registered
+        }));
+      }
+    } catch (error) {
+      console.error("Auth check failed", error);
+    }
+    
+    // Fetch questions
+    await fetchQuestions();
+    
+    // Fetch service name if serviceId exists
+    if (serviceId) {
+      await fetchServiceName();
+    }
+    
+    setStep("intro");
+  };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -85,7 +123,19 @@ export default function GetStartedPage() {
     }
   };
 
-  const handleStart = () => setStep("info");
+  // For logged-in users, skip to survey directly
+  const handleStart = () => {
+    if (loggedInUser) {
+      // Skip info and shipping forms for logged-in users
+      if (questions.length > 0) {
+        setStep("survey");
+      } else {
+        submitSurvey();
+      }
+    } else {
+      setStep("info");
+    }
+  };
 
   const handleInfoSubmit = (e) => {
     e.preventDefault();
@@ -154,7 +204,11 @@ export default function GetStartedPage() {
       const res = await fetch("/api/survey/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userInfo, answers: formattedAnswers }),
+        body: JSON.stringify({ 
+          userInfo, 
+          answers: formattedAnswers,
+          serviceId: serviceId || null,
+        }),
       });
       
       const data = await res.json();
@@ -187,35 +241,58 @@ export default function GetStartedPage() {
         </div>
       )}
 
+      {/* Loading State */}
+      {step === 'loading' && (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
+
       {/* Intro Step */}
       {step === 'intro' && (
         <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 max-w-5xl mx-auto w-full px-6 py-20">
           <div className="flex-1 flex justify-center md:justify-end animate-fadeIn">
             <h1 className="font-serif text-6xl md:text-8xl font-bold text-secondary tracking-tight">
-              Survey<span className="text-primary">.</span>
+              {serviceName || "Survey"}<span className="text-primary">.</span>
             </h1>
           </div>
           
           <div className="flex-1 max-w-md text-left">
-            <h2 className="text-3xl md:text-4xl font-light text-secondary mb-4 leading-tight animate-fadeIn">
-              New Account Registration
-            </h2>
-            <p className="text-gray-600 mb-8 leading-relaxed animate-fadeIn">
-              Fill out our brief 2-minute account registration questionnaire.
-            </p>
+            {loggedInUser ? (
+              <>
+                <h2 className="text-3xl md:text-4xl font-light text-secondary mb-4 leading-tight animate-fadeIn">
+                  Welcome back, {loggedInUser.firstName}!
+                </h2>
+                <p className="text-gray-600 mb-8 leading-relaxed animate-fadeIn">
+                  {serviceName 
+                    ? `You're about to take the ${serviceName} assessment. Since you're already logged in, we'll skip the registration steps.`
+                    : "You're about to take a new assessment. Since you're already logged in, we'll skip the registration steps."
+                  }
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-3xl md:text-4xl font-light text-secondary mb-4 leading-tight animate-fadeIn">
+                  {serviceName ? `${serviceName} Assessment` : "New Account Registration"}
+                </h2>
+                <p className="text-gray-600 mb-8 leading-relaxed animate-fadeIn">
+                  Fill out our brief 2-minute questionnaire.
+                </p>
+              </>
+            )}
 
             <button
               onClick={handleStart}
               className="px-8 py-3 bg-secondary text-white rounded-full font-bold text-sm tracking-wide hover:bg-secondary/90 transition-all shadow-md animate-fadeIn"
             >
-              Let's Get Started
+              {loggedInUser ? "Start Assessment" : "Let's Get Started"}
             </button>
             
             <div className="flex items-center gap-2 mt-4 text-xs text-gray-500 font-medium animate-fadeIn">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
                 <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
               </svg>
-              Takes 1 minute 30 seconds
+              {loggedInUser ? "Takes about 1 minute" : "Takes 1 minute 30 seconds"}
             </div>
           </div>
         </div>

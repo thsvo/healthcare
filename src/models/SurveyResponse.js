@@ -37,6 +37,10 @@ const SurveyResponseSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
+  serviceId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Service',
+  },
 }, {
   timestamps: true,
 });

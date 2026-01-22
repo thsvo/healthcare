@@ -27,6 +27,13 @@ export default function PatientDetailPage() {
   const [noteContent, setNoteContent] = useState("");
   const [viewingNote, setViewingNote] = useState(null);
   
+  // Survey submissions state
+  const [surveySubmissions, setSurveySubmissions] = useState([]);
+  const [viewingSubmission, setViewingSubmission] = useState(null);
+  const [doctors, setDoctors] = useState([]);
+  const [selectedDoctor, setSelectedDoctor] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+  
   const noteTypes = [
     { name: 'Phone Visit', icon: '📞' },
     { name: 'Triage Encounter', icon: '🏥' },
@@ -48,26 +55,45 @@ export default function PatientDetailPage() {
 
   const fetchData = async () => {
     try {
-      const [userRes, categoriesRes, questionsRes, notesRes] = await Promise.all([
+      const [userRes, categoriesRes, questionsRes, notesRes, doctorsRes] = await Promise.all([
         fetch(`/api/users/${params.id}`),
         fetch("/api/categories"),
         fetch("/api/survey/questions"),
         fetch(`/api/users/${params.id}/notes`),
+        fetch("/api/doctors"),
       ]);
       
       const userData = await userRes.json();
       const categoriesData = await categoriesRes.json();
       const questionsData = await questionsRes.json();
       const notesData = await notesRes.json();
+      const doctorsData = await doctorsRes.json();
       
-      if (userData.success) setUser(userData.data);
+      if (userData.success) {
+        setUser(userData.data);
+        // Fetch survey submissions for this user
+        fetchSurveySubmissions(userData.data._id);
+      }
       if (categoriesData.success) setCategories(categoriesData.data);
       if (questionsData.success) setQuestions(questionsData.data);
       if (notesData.success) setNotes(notesData.data);
+      if (doctorsData.success) setDoctors(doctorsData.data);
     } catch (error) {
       console.error("Failed to fetch data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSurveySubmissions = async (userId) => {
+    try {
+      const res = await fetch(`/api/survey/responses?userId=${userId}`);
+      const data = await res.json();
+      if (data.success) {
+        setSurveySubmissions(data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch survey submissions:", error);
     }
   };
 
@@ -554,9 +580,51 @@ export default function PatientDetailPage() {
               </svg>
               Timeline
             </h3>
-            <div className="space-y-3 max-h-80 overflow-y-auto">
-              {notes.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">No notes yet</p>
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {/* Survey Submissions */}
+              {surveySubmissions.map((submission) => (
+                <div 
+                  key={submission._id} 
+                  className={`border-l-2 pl-3 py-1 group cursor-pointer rounded-r-lg transition-colors ${
+                    submission.status === 'reviewed' ? 'border-green-400 hover:bg-green-50' :
+                    submission.status === 'archived' ? 'border-red-300 hover:bg-red-50' :
+                    'border-purple-300 hover:bg-purple-50'
+                  }`}
+                  onClick={() => setViewingSubmission(submission)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs text-purple-700 font-medium">Survey Submission</span>
+                        {submission.serviceId && (
+                          <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-700">
+                            {submission.serviceId.name}
+                          </span>
+                        )}
+                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                          submission.status === 'reviewed' ? 'bg-green-100 text-green-700' :
+                          submission.status === 'archived' ? 'bg-red-100 text-red-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {submission.status === 'reviewed' ? 'Approved' : 
+                           submission.status === 'archived' ? 'Rejected' : 
+                           'Pending'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-900 mt-0.5">
+                        {submission.answers?.length || 0} questions answered
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(submission.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {/* Notes */}
+              {notes.length === 0 && surveySubmissions.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-4">No timeline items yet</p>
               ) : (
                 notes.map((note) => (
                   <div 
@@ -757,6 +825,175 @@ export default function PatientDetailPage() {
                 >
                   Delete
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Submission Modal */}
+      {viewingSubmission && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-purple-700 rounded-t-2xl">
+              <div>
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                  📋 Survey Submission
+                </h3>
+                <div className="flex items-center gap-3 mt-1">
+                  {viewingSubmission.serviceId && (
+                    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-white/20 text-white">
+                      {viewingSubmission.serviceId.name}
+                    </span>
+                  )}
+                  <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                    viewingSubmission.status === 'reviewed' ? 'bg-green-400/20 text-green-100' :
+                    viewingSubmission.status === 'archived' ? 'bg-red-400/20 text-red-100' :
+                    'bg-yellow-400/20 text-yellow-100'
+                  }`}>
+                    {viewingSubmission.status}
+                  </span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setViewingSubmission(null)} 
+                className="text-white/70 hover:text-white transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1">
+              {/* Meta Info */}
+              <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Submitted</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {new Date(viewingSubmission.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Status</p>
+                  <p className="text-sm font-medium text-gray-900 capitalize">
+                    {viewingSubmission.status}
+                  </p>
+                </div>
+              </div>
+              
+              <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-purple-600">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                </svg>
+                Questions & Answers ({viewingSubmission.answers?.length || 0})
+              </h4>
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {viewingSubmission.answers?.length > 0 ? (
+                  viewingSubmission.answers.map((qa, index) => (
+                    <div key={index} className="border-l-4 border-purple-200 pl-4 py-2">
+                      <p className="font-medium text-gray-900 mb-1">
+                        <span className="text-purple-600 mr-2">Q{index + 1}.</span>
+                        {qa.questionText}
+                      </p>
+                      <p className="text-gray-600">
+                        {Array.isArray(qa.answer) 
+                          ? qa.answer.join(", ") 
+                          : qa.answer || <span className="text-gray-400 italic">No answer</span>
+                        }
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center py-4">No answers recorded</p>
+                )}
+              </div>
+            </div>
+            
+            {/* Admin Actions Footer */}
+            <div className="p-4 border-t border-gray-100 bg-gray-50">
+              <div className="flex items-center gap-4">
+                {/* Assign Doctor */}
+                <div className="flex-1">
+                  <label className="block text-xs text-gray-500 mb-1">Assign Doctor</label>
+                  <select
+                    value={selectedDoctor}
+                    onChange={(e) => setSelectedDoctor(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
+                  >
+                    <option value="">Select Doctor...</option>
+                    {doctors.map(doc => (
+                      <option key={doc._id} value={doc._id}>
+                        Dr. {doc.firstName} {doc.lastName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setViewingSubmission(null)}
+                    className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors font-medium"
+                  >
+                    Close
+                  </button>
+                  {viewingSubmission.status !== 'archived' && (
+                    <button
+                      onClick={async () => {
+                        setActionLoading(true);
+                        try {
+                          await fetch(`/api/survey/responses/${viewingSubmission._id}`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ status: 'archived' }),
+                          });
+                          setViewingSubmission(null);
+                          fetchSurveySubmissions(user._id);
+                        } catch (e) { alert("Failed to reject"); }
+                        setActionLoading(false);
+                      }}
+                      disabled={actionLoading}
+                      className="px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors font-medium disabled:opacity-50"
+                    >
+                      Reject
+                    </button>
+                  )}
+                  {viewingSubmission.status === 'new' && (
+                    <button
+                      onClick={async () => {
+                        setActionLoading(true);
+                        try {
+                          // Update submission status
+                          await fetch(`/api/survey/responses/${viewingSubmission._id}`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ status: 'reviewed' }),
+                          });
+                          // Update user status if needed
+                          if (user.accountStatus !== 'active') {
+                            await fetch(`/api/users/${user._id}`, {
+                              method: "PUT",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ 
+                                accountStatus: 'active',
+                                ...(selectedDoctor && { assignedDoctorId: selectedDoctor })
+                              }),
+                            });
+                          }
+                          setViewingSubmission(null);
+                          fetchSurveySubmissions(user._id);
+                          fetchData(); // Refresh user data
+                        } catch (e) { alert("Failed to approve"); }
+                        setActionLoading(false);
+                      }}
+                      disabled={actionLoading}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50"
+                    >
+                      {actionLoading ? "Processing..." : "Approve"}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

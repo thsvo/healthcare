@@ -3,6 +3,8 @@ import dbConnect from "@/lib/db";
 import SurveyResponse from "@/models/SurveyResponse";
 import User from "@/models/User";
 import { sendWelcomeEmail, generatePassword } from "@/lib/email";
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
 
 // POST submit survey
 export async function POST(request) {
@@ -10,68 +12,103 @@ export async function POST(request) {
     await dbConnect();
     const body = await request.json();
     
-    const { userInfo, answers } = body;
+    const { userInfo, answers, serviceId } = body;
     
-    // Check if user already exists
-    const existingUser = await User.findOne({ email: userInfo.email });
-    if (existingUser) {
-      return NextResponse.json(
-        { success: false, error: "An account with this email already exists. Please login instead." },
-        { status: 400 }
-      );
+    // Check if user is logged in via token
+    let loggedInUser = null;
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
+    
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        loggedInUser = await User.findById(decoded.userId);
+      } catch (e) {
+        // Invalid token, proceed as guest
+      }
     }
     
-    // Create survey response
+    let user = loggedInUser;
+    let isNewUser = false;
+    
+    // If not logged in, check if user exists by email
+    if (!user && userInfo?.email) {
+      user = await User.findOne({ email: userInfo.email });
+      
+      // If user doesn't exist, create new account
+      if (!user) {
+        const generatedPassword = generatePassword(10);
+        
+        user = await User.create({
+          email: userInfo.email,
+          password: generatedPassword,
+          firstName: userInfo.firstName,
+          lastName: userInfo.lastName,
+          birthday: userInfo.birthday,
+          sex: userInfo.sex,
+          phone: userInfo.phone,
+          company: userInfo.company,
+          address: userInfo.address,
+          addressLine2: userInfo.addressLine2,
+          city: userInfo.city,
+          state: userInfo.state,
+          zipCode: userInfo.zipCode,
+          role: 'user',
+        });
+        
+        isNewUser = true;
+        
+        // Send welcome email with credentials (async, non-blocking)
+        sendWelcomeEmail(userInfo.email, userInfo.firstName, generatedPassword)
+          .then((sent) => {
+            if (sent) {
+              console.log(`Welcome email sent to ${userInfo.email}`);
+            } else {
+              console.error(`Failed to send welcome email to ${userInfo.email}`);
+            }
+          })
+          .catch((err) => {
+            console.error(`Email error for ${userInfo.email}:`, err);
+          });
+      }
+    }
+    
+    // Create survey response with serviceId
     const surveyResponse = await SurveyResponse.create({
-      userInfo,
+      userInfo: loggedInUser ? {
+        firstName: loggedInUser.firstName,
+        lastName: loggedInUser.lastName,
+        email: loggedInUser.email,
+        phone: loggedInUser.phone,
+        birthday: loggedInUser.birthday,
+        sex: loggedInUser.sex,
+        company: loggedInUser.company,
+        address: loggedInUser.address,
+        addressLine2: loggedInUser.addressLine2,
+        city: loggedInUser.city,
+        state: loggedInUser.state,
+        zipCode: loggedInUser.zipCode,
+      } : userInfo,
       answers,
       status: "new",
+      userId: user?._id,
+      serviceId: serviceId || null,
     });
     
-    // Generate random password
-    const generatedPassword = generatePassword(10);
-    
-    // Create user account
-    const newUser = await User.create({
-      email: userInfo.email,
-      password: generatedPassword,
-      firstName: userInfo.firstName,
-      lastName: userInfo.lastName,
-      birthday: userInfo.birthday,
-      sex: userInfo.sex,
-      phone: userInfo.phone,
-      company: userInfo.company,
-      address: userInfo.address,
-      addressLine2: userInfo.addressLine2,
-      city: userInfo.city,
-      state: userInfo.state,
-      zipCode: userInfo.zipCode,
-      surveyResponseId: surveyResponse._id,
-      role: 'user',
-    });
-    
-    // Link user to survey response
-    surveyResponse.userId = newUser._id;
-    await surveyResponse.save();
-    
-    // Send welcome email with credentials (async, non-blocking)
-    sendWelcomeEmail(userInfo.email, userInfo.firstName, generatedPassword)
-      .then((sent) => {
-        if (sent) {
-          console.log(`Welcome email sent to ${userInfo.email}`);
-        } else {
-          console.error(`Failed to send welcome email to ${userInfo.email}`);
-        }
-      })
-      .catch((err) => {
-        console.error(`Email error for ${userInfo.email}:`, err);
-      });
+    // Update user's first surveyResponseId if new user
+    if (isNewUser && user) {
+      user.surveyResponseId = surveyResponse._id;
+      await user.save();
+    }
     
     return NextResponse.json({
       success: true,
       data: {
         surveyResponse,
-        message: "Survey submitted successfully! Check your email for login credentials.",
+        isNewUser,
+        message: isNewUser 
+          ? "Survey submitted successfully! Check your email for login credentials."
+          : "Survey submitted successfully!",
       }
     }, { status: 201 });
     
