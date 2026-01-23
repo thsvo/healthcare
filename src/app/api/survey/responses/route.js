@@ -20,6 +20,7 @@ export async function GET(request) {
     const responses = await SurveyResponse.find(query)
       .populate('serviceId', 'name image')
       .populate('userId', 'firstName lastName email')
+      .populate({ path: 'assignedDoctor', select: 'firstName lastName', strictPopulate: false })
       .sort({ createdAt: -1 });
     
     return NextResponse.json({ success: true, data: responses });

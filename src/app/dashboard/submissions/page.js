@@ -1,14 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function SubmissionsPage() {
   const [submissions, setSubmissions] = useState([]);
+  const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
 
   useEffect(() => {
     fetchSubmissions();
+    fetchDoctors();
   }, []);
 
   const fetchSubmissions = async () => {
@@ -22,6 +25,18 @@ export default function SubmissionsPage() {
       console.error("Failed to fetch submissions:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDoctors = async () => {
+    try {
+      const res = await fetch("/api/doctors");
+      const data = await res.json();
+      if (data.success) {
+        setDoctors(data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch doctors:", error);
     }
   };
 
@@ -42,6 +57,46 @@ export default function SubmissionsPage() {
     }
   };
 
+  const handleAssignDoctor = async (id, doctorId) => {
+    try {
+      const res = await fetch(`/api/survey/responses/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignedDoctor: doctorId || null }),
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        // Optimistic update or refetch
+        setSubmissions(prev => prev.map(sub => 
+          sub._id === id ? { ...sub, assignedDoctor: doctors.find(d => d._id === doctorId) || null } : sub
+        ));
+      }
+    } catch (error) {
+      console.error("Failed to assign doctor:", error);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this submission?")) return;
+    
+    try {
+      const res = await fetch(`/api/survey/responses/${id}`, {
+        method: "DELETE",
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        setSubmissions(prev => prev.filter(sub => sub._id !== id));
+        if (selectedSubmission?._id === id) {
+          setSelectedSubmission(null);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to delete submission:", error);
+    }
+  };
+
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -55,7 +110,9 @@ export default function SubmissionsPage() {
   const getStatusColor = (status) => {
     switch (status) {
       case 'new': return 'bg-yellow-100 text-yellow-700';
-      case 'reviewed': return 'bg-green-100 text-green-700';
+      case 'reviewed': return 'bg-blue-100 text-blue-700';
+      case 'approved': return 'bg-green-100 text-green-700';
+      case 'rejected': return 'bg-red-100 text-red-700';
       case 'archived': return 'bg-gray-100 text-gray-600';
       default: return 'bg-gray-100 text-gray-600';
     }
@@ -100,6 +157,7 @@ export default function SubmissionsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Dr</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -145,6 +203,21 @@ export default function SubmissionsPage() {
                       {sub.status}
                     </span>
                   </td>
+                  <td className="px-6 py-4">
+                    <select
+                      value={sub.assignedDoctor?._id || ""}
+                      onChange={(e) => handleAssignDoctor(sub._id, e.target.value)}
+                      className="text-sm border-gray-200 rounded-md focus:border-primary focus:ring-primary bg-transparent py-1 pl-2 pr-8"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <option value="">Unassigned</option>
+                      {doctors.map(doc => (
+                        <option key={doc._id} value={doc._id}>
+                          Dr. {doc.firstName} {doc.lastName}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
                       onClick={() => setSelectedSubmission(sub)}
@@ -160,6 +233,18 @@ export default function SubmissionsPage() {
                         Mark Reviewed
                       </button>
                     )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(sub._id);
+                      }}
+                      className="text-red-500 hover:text-red-700 ml-3"
+                      title="Delete Submission"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                      </svg>
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -169,11 +254,23 @@ export default function SubmissionsPage() {
       </div>
 
       {/* Q&A Details Modal */}
-      {selectedSubmission && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      {/* Q&A Details Modal */}
+      <AnimatePresence>
+        {selectedSubmission && (
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            drag
+            dragMomentum={false}
+            className="fixed top-24 right-6 w-full max-w-lg bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[80vh] overflow-hidden"
+            style={{ cursor: "default" }}
+          >
             {/* Modal Header */}
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+            <div 
+              className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50 cursor-move"
+            >
               <div>
                 <h3 className="text-lg font-semibold text-secondary">
                   Submission Details
@@ -189,7 +286,8 @@ export default function SubmissionsPage() {
               </div>
               <button
                 onClick={() => setSelectedSubmission(null)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
+                onPointerDown={(e) => e.stopPropagation()} // Prevent drag when clicking close
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -198,7 +296,10 @@ export default function SubmissionsPage() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto flex-1">
+            <div 
+              className="p-6 overflow-y-auto flex-1 cursor-default"
+              onPointerDown={(e) => e.stopPropagation()} // Allow text selection and scrolling without dragging
+            >
               {/* User Info */}
               <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                 <h4 className="font-medium text-gray-900 mb-3">Contact Information</h4>
@@ -249,28 +350,43 @@ export default function SubmissionsPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-gray-100 flex justify-end gap-3">
+            <div 
+              className="p-4 border-t border-gray-100 flex justify-end gap-3 bg-white"
+              onPointerDown={(e) => e.stopPropagation()} // Prevent drag
+            >
               <button
                 onClick={() => setSelectedSubmission(null)}
                 className="px-4 py-2 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Close
               </button>
-              {selectedSubmission.status === 'new' && (
+
+              {selectedSubmission.status !== 'approved' && (
                 <button
                   onClick={() => {
-                    handleStatusChange(selectedSubmission._id, 'reviewed');
+                    handleStatusChange(selectedSubmission._id, 'approved');
                     setSelectedSubmission(null);
                   }}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
-                  Mark as Reviewed
+                  Approve
+                </button>
+              )}
+              {selectedSubmission.status !== 'rejected' && (
+                <button
+                  onClick={() => {
+                    handleStatusChange(selectedSubmission._id, 'rejected');
+                    setSelectedSubmission(null);
+                  }}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Reject
                 </button>
               )}
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

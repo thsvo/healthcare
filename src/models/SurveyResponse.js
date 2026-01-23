@@ -30,7 +30,7 @@ const SurveyResponseSchema = new mongoose.Schema({
   }],
   status: {
     type: String,
-    enum: ['new', 'reviewed', 'archived'],
+    enum: ['new', 'reviewed', 'archived', 'approved', 'rejected'],
     default: 'new',
   },
   userId: {
@@ -40,6 +40,10 @@ const SurveyResponseSchema = new mongoose.Schema({
   serviceId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Service',
+  },
+  assignedDoctor: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
   },
 }, {
   timestamps: true,
