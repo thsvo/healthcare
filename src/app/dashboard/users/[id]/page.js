@@ -673,9 +673,9 @@ export default function PatientDetailPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 100 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            drag
+            drag={!isAddModalExpanded}
             dragMomentum={false}
-            className="fixed top-24 right-6 w-full max-w-md bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[80vh] overflow-hidden"
+            className={isAddModalExpanded ? "fixed inset-0 z-50 bg-white flex flex-col" : "fixed top-24 right-6 w-full max-w-md bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[80vh] overflow-hidden"}
             style={{ cursor: "default" }}
           >
             {/* Modal Header */}
@@ -769,9 +769,9 @@ export default function PatientDetailPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 100 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            drag
+            drag={!isNoteModalExpanded}
             dragMomentum={false}
-            className="fixed top-24 right-6 w-full max-w-md bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[80vh] overflow-hidden"
+            className={isNoteModalExpanded ? "fixed inset-0 z-50 bg-white flex flex-col" : "fixed top-24 right-6 w-full max-w-md bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[80vh] overflow-hidden"}
             style={{ cursor: "default" }}
           >
             <div 
@@ -851,9 +851,9 @@ export default function PatientDetailPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 100 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            drag
+            drag={!isViewNoteExpanded}
             dragMomentum={false}
-            className="fixed top-24 right-6 w-full max-w-lg bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[80vh] overflow-hidden"
+            className={isViewNoteExpanded ? "fixed inset-0 z-50 bg-white flex flex-col" : "fixed top-24 right-6 w-full max-w-lg bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[80vh] overflow-hidden"}
             style={{ cursor: "default" }}
           >
             <div 
@@ -943,9 +943,9 @@ export default function PatientDetailPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 100 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            drag
+            drag={!isSubmissionExpanded}
             dragMomentum={false}
-            className="fixed top-24 right-6 w-full max-w-lg bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[80vh] overflow-hidden"
+            className={isSubmissionExpanded ? "fixed inset-0 z-50 bg-white flex flex-col" : "fixed top-24 right-6 w-full max-w-lg bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[80vh] overflow-hidden"}
             style={{ cursor: "default" }}
           >
             <div 
