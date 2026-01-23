@@ -1,0 +1,76 @@
+﻿{
+    "success":  true,
+    "data":  {
+                 "userInfo":  {
+                                  "firstName":  "",
+                                  "lastName":  "",
+                                  "birthday":  null,
+                                  "sex":  "",
+                                  "company":  "",
+                                  "email":  "admin@survey.com",
+                                  "phone":  "",
+                                  "address":  "",
+                                  "addressLine2":  "",
+                                  "city":  "",
+                                  "state":  "",
+                                  "zipCode":  ""
+                              },
+                 "_id":  "69720c8fbe848b2ce2c0b01f",
+                 "answers":  [
+                                 {
+                                     "questionId":  "69706a27ee939c5b2b75e6c4",
+                                     "questionText":  "Height",
+                                     "answer":  "11",
+                                     "_id":  "69720c8fbe848b2ce2c0b020"
+                                 },
+                                 {
+                                     "questionId":  "69706a36ee939c5b2b75e6c8",
+                                     "questionText":  "Current Weight",
+                                     "answer":  "180",
+                                     "_id":  "69720c8fbe848b2ce2c0b021"
+                                 },
+                                 {
+                                     "questionId":  "69710ed454dd9e584fcfb92a",
+                                     "questionText":  "List all allergies",
+                                     "answer":  "55",
+                                     "_id":  "69720c8fbe848b2ce2c0b022"
+                                 },
+                                 {
+                                     "questionId":  "69710e22a24c84a3266a1a96",
+                                     "questionText":  "dnedn",
+                                     "answer":  "55555",
+                                     "_id":  "69720c8fbe848b2ce2c0b023"
+                                 },
+                                 {
+                                     "questionId":  "69720c26c211ecd89625c2cc",
+                                     "questionText":  "how is it",
+                                     "answer":  "fgd",
+                                     "_id":  "69720c8fbe848b2ce2c0b024"
+                                 },
+                                 {
+                                     "questionId":  "69720c52df955768db91ab19",
+                                     "questionText":  "tell me more",
+                                     "answer":  "dg",
+                                     "_id":  "69720c8fbe848b2ce2c0b025"
+                                 },
+                                 {
+                                     "questionId":  "6971fea87220559e4d85308a",
+                                     "questionText":  "test",
+                                     "answer":  "dg",
+                                     "_id":  "69720c8fbe848b2ce2c0b026"
+                                 }
+                             ],
+                 "status":  "reviewed",
+                 "userId":  "696f590253b3ecff43faaaf6",
+                 "serviceId":  null,
+                 "createdAt":  "2026-01-22T11:39:59.873Z",
+                 "updatedAt":  "2026-01-23T18:34:48.250Z",
+                 "__v":  0,
+                 "assignedDoctor":  {
+                                        "_id":  "6970379c470d9fb3429a126c",
+                                        "email":  "doctor@gmail.com",
+                                        "firstName":  "Tariqul",
+                                        "lastName":  "Islam"
+                                    }
+             }
+}

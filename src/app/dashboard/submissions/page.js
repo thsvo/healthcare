@@ -8,6 +8,7 @@ export default function SubmissionsPage() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [selectedDoctor, setSelectedDoctor] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
@@ -68,10 +69,13 @@ export default function SubmissionsPage() {
       
       const data = await res.json();
       if (data.success) {
-        // Optimistic update or refetch
+        // Use the server-returned data which relies on populate
         setSubmissions(prev => prev.map(sub => 
-          sub._id === id ? { ...sub, assignedDoctor: doctors.find(d => d._id === doctorId) || null } : sub
+          sub._id === id ? data.data : sub
         ));
+      } else {
+        console.error("Failed to assign doctor:", data.error);
+        alert("Failed to assign doctor: " + data.error);
       }
     } catch (error) {
       console.error("Failed to assign doctor:", error);
@@ -116,6 +120,40 @@ export default function SubmissionsPage() {
       case 'rejected': return 'bg-red-100 text-red-700';
       case 'archived': return 'bg-gray-100 text-gray-600';
       default: return 'bg-gray-100 text-gray-600';
+    }
+  };
+
+  // When selectedSubmission opens, set the doctor
+  useEffect(() => {
+    if (selectedSubmission) {
+      console.log("Opening submission:", selectedSubmission._id, "Assigned Doctor:", selectedSubmission.assignedDoctor);
+      setSelectedDoctor(selectedSubmission.assignedDoctor?._id || "");
+    }
+  }, [selectedSubmission]);
+
+  const handleApprove = async () => {
+    try {
+      console.log("Approving submission:", selectedSubmission._id, "Selected Doctor:", selectedDoctor);
+      const res = await fetch(`/api/survey/responses/${selectedSubmission._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          status: 'reviewed',
+          assignedDoctor: selectedDoctor || null
+        }),
+      });
+      
+      const data = await res.json();
+      console.log("Approve response:", data);
+      
+      if (data.success) {
+        // Refetch to ensure we have the latest populated data
+        await fetchSubmissions();
+        setSelectedSubmission(null);
+        setIsExpanded(false);
+      }
+    } catch (error) {
+      console.error("Failed to approve:", error);
     }
   };
 
@@ -204,20 +242,17 @@ export default function SubmissionsPage() {
                       {sub.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <select
-                      value={sub.assignedDoctor?._id || ""}
-                      onChange={(e) => handleAssignDoctor(sub._id, e.target.value)}
-                      className="text-sm border-gray-200 rounded-md focus:border-primary focus:ring-primary bg-transparent py-1 pl-2 pr-8"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <option value="">Unassigned</option>
-                      {doctors.map(doc => (
-                        <option key={doc._id} value={doc._id}>
-                          Dr. {doc.firstName} {doc.lastName}
-                        </option>
-                      ))}
-                    </select>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    {sub.assignedDoctor ? (
+                      <div className="flex items-center gap-2">
+                         <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
+                          {sub.assignedDoctor.firstName?.charAt(0)}
+                        </div>
+                        <span>Dr. {sub.assignedDoctor.firstName} {sub.assignedDoctor.lastName}</span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 italic">Unassigned</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
@@ -226,14 +261,6 @@ export default function SubmissionsPage() {
                     >
                       View Q&A
                     </button>
-                    {sub.status === 'new' && (
-                      <button
-                        onClick={() => handleStatusChange(sub._id, 'reviewed')}
-                        className="text-green-600 hover:text-green-800"
-                      >
-                        Mark Reviewed
-                      </button>
-                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -373,38 +400,64 @@ export default function SubmissionsPage() {
 
             {/* Modal Footer */}
             <div 
-              className="p-4 border-t border-gray-100 flex justify-end gap-3 bg-white"
+              className="p-4 border-t border-gray-100 bg-gray-50"
               onPointerDown={(e) => e.stopPropagation()} // Prevent drag
             >
-              <button
-                onClick={() => { setSelectedSubmission(null); setIsExpanded(false); }}
-                className="px-4 py-2 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Close
-              </button>
+              <div className="flex items-center gap-4">
+                {/* Assign Doctor */}
+                <div className="flex-1">
+                   <label className="block text-xs text-gray-500 mb-1">Assign Doctor</label>
+                   <select
+                     value={selectedDoctor}
+                     onChange={(e) => setSelectedDoctor(e.target.value)}
+                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                   >
+                     <option value="">Select Doctor...</option>
+                     {doctors.map(doc => (
+                       <option key={doc._id} value={doc._id}>
+                         Dr. {doc.firstName} {doc.lastName}
+                       </option>
+                     ))}
+                   </select>
+                </div>
 
-              {selectedSubmission.status !== 'approved' && (
-                <button
-                  onClick={() => {
-                    handleStatusChange(selectedSubmission._id, 'approved');
-                    setSelectedSubmission(null);
-                  }}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  Approve
-                </button>
-              )}
-              {selectedSubmission.status !== 'rejected' && (
-                <button
-                  onClick={() => {
-                    handleStatusChange(selectedSubmission._id, 'rejected');
-                    setSelectedSubmission(null);
-                  }}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Reject
-                </button>
-              )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setSelectedSubmission(null); setIsExpanded(false); }}
+                    className="px-4 py-2 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Close
+                  </button>
+
+                  {selectedSubmission.status !== 'reviewed' && selectedSubmission.status !== 'approved' ? (
+                    <button
+                      onClick={handleApprove}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      Approve
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleApprove}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Update
+                    </button>
+                  )}
+                  {selectedSubmission.status !== 'rejected' && (
+                    <button
+                      onClick={() => {
+                        handleStatusChange(selectedSubmission._id, 'rejected');
+                        setSelectedSubmission(null);
+                        setIsExpanded(false);
+                      }}
+                      class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      Reject
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
