@@ -8,6 +8,7 @@ export default function SubmissionsPage() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     fetchSubmissions();
@@ -262,10 +263,13 @@ export default function SubmissionsPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 100 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            drag
+            drag={!isExpanded}
             dragMomentum={false}
-            className="fixed top-24 right-6 w-full max-w-lg bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[80vh] overflow-hidden"
-            style={{ cursor: "default" }}
+            className={isExpanded 
+              ? "fixed inset-0 z-50 bg-white flex flex-col" 
+              : "fixed top-24 right-6 w-full max-w-lg bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[80vh] overflow-hidden"
+            }
+            style={{ cursor: isExpanded ? "default" : "default" }}
           >
             {/* Modal Header */}
             <div 
@@ -284,15 +288,33 @@ export default function SubmissionsPage() {
                   )}
                 </p>
               </div>
-              <button
-                onClick={() => setSelectedSubmission(null)}
-                className="p-2 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
-                onPointerDown={(e) => e.stopPropagation()} // Prevent drag when clicking close
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="p-2 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer text-gray-500"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  title={isExpanded ? "Collapse" : "Expand"}
+                >
+                  {isExpanded ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5M15 15l5.25 5.25" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                    </svg>
+                  )}
+                </button>
+                <button
+                  onClick={() => { setSelectedSubmission(null); setIsExpanded(false); }}
+                  className="p-2 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer text-gray-500"
+                  onPointerDown={(e) => e.stopPropagation()} // Prevent drag when clicking close
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Modal Body */}
@@ -355,7 +377,7 @@ export default function SubmissionsPage() {
               onPointerDown={(e) => e.stopPropagation()} // Prevent drag
             >
               <button
-                onClick={() => setSelectedSubmission(null)}
+                onClick={() => { setSelectedSubmission(null); setIsExpanded(false); }}
                 className="px-4 py-2 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Close

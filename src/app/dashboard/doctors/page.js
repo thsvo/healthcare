@@ -1,12 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function DoctorsPage() {
   const [doctors, setDoctors] = useState([]);
+  const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState(null);
+  const [viewingDoctor, setViewingDoctor] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [doctorTasks, setDoctorTasks] = useState({ patients: [], surveys: [] });
+  const [loadingTasks, setLoadingTasks] = useState(false);
+  
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -15,21 +22,63 @@ export default function DoctorsPage() {
   });
 
   useEffect(() => {
-    fetchDoctors();
+    fetchDoctorsAndStats();
   }, []);
 
-  const fetchDoctors = async () => {
+  const fetchDoctorsAndStats = async () => {
     try {
-      const res = await fetch("/api/doctors");
-      const data = await res.json();
-      if (data.success) {
-        setDoctors(data.data);
+      const [doctorsRes, statsRes] = await Promise.all([
+        fetch("/api/doctors"),
+        fetch("/api/doctors/stats")
+      ]);
+      
+      const doctorsData = await doctorsRes.json();
+      const statsData = await statsRes.json();
+      
+      if (doctorsData.success) {
+        setDoctors(doctorsData.data);
+      }
+      
+      if (statsData.success) {
+        // Convert array to object map by ID
+        const statsMap = {};
+        statsData.data.forEach(s => {
+          statsMap[s._id] = s;
+        });
+        setStats(statsMap);
       }
     } catch (error) {
-      console.error("Failed to fetch doctors:", error);
+      console.error("Failed to fetch data:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchDoctorDetails = async (doctorId) => {
+    setLoadingTasks(true);
+    try {
+      const [patientsRes, surveysRes] = await Promise.all([
+        fetch(`/api/users?assignedDoctorId=${doctorId}`),
+        fetch(`/api/survey/responses?assignedDoctor=${doctorId}`)
+      ]);
+      
+      const patientsData = await patientsRes.json();
+      const surveysData = await surveysRes.json();
+      
+      setDoctorTasks({
+        patients: patientsData.success ? patientsData.data : [],
+        surveys: surveysData.success ? surveysData.data : []
+      });
+    } catch (error) {
+      console.error("Failed to fetch details:", error);
+    } finally {
+      setLoadingTasks(false);
+    }
+  };
+
+  const handleViewDetails = (doctor) => {
+    setViewingDoctor(doctor);
+    fetchDoctorDetails(doctor._id);
   };
 
   const handleSubmit = async (e) => {
@@ -59,7 +108,7 @@ export default function DoctorsPage() {
       
       const data = await res.json();
       if (data.success) {
-        fetchDoctors();
+        fetchDoctorsAndStats();
         closeModal();
       } else {
         alert(data.error);
@@ -80,7 +129,7 @@ export default function DoctorsPage() {
       
       const data = await res.json();
       if (data.success) {
-        fetchDoctors();
+        fetchDoctorsAndStats();
       } else {
         alert(data.error);
       }
@@ -169,52 +218,77 @@ export default function DoctorsPage() {
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Workload</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {doctors.map((doctor) => (
-                <tr key={doctor._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">
-                        {doctor.firstName?.charAt(0) || "D"}
+              {doctors.map((doctor) => {
+                const docStats = stats[doctor._id] || { patientCount: 0, surveyCount: 0, pendingSurveys: 0 };
+                return (
+                  <tr key={doctor._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">
+                          {doctor.firstName?.charAt(0) || "D"}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            Dr. {doctor.firstName} {doctor.lastName}
+                          </p>
+                          <p className="text-xs text-gray-500">{doctor.email}</p>
+                        </div>
                       </div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {doctor.firstName} {doctor.lastName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex gap-4">
+                        <div className="text-center">
+                          <span className="block text-lg font-bold text-gray-900">{docStats.patientCount}</span>
+                          <span className="text-xs text-gray-500">Patients</span>
+                        </div>
+                        <div className="text-center">
+                          <span className="block text-lg font-bold text-purple-600">{docStats.pendingSurveys}</span>
+                          <span className="text-xs text-gray-500">New Tasks</span>
+                        </div>
+                        <div className="text-center">
+                          <span className="block text-lg font-bold text-gray-500">{docStats.surveyCount}</span>
+                          <span className="text-xs text-gray-500">Total Tasks</span>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {doctor.email}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(doctor.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => openModal(doctor)}
-                      className="text-primary hover:text-primary/80 mr-3"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(doctor._id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(doctor.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => handleViewDetails(doctor)}
+                        className="text-primary hover:text-primary/80 mr-3 font-semibold"
+                      >
+                        View Details
+                      </button>
+                      <button
+                        onClick={() => openModal(doctor)}
+                        className="text-gray-400 hover:text-gray-600 mr-3"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(doctor._id)}
+                        className="text-red-400 hover:text-red-600"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
       </div>
 
-      {/* Modal */}
+      {/* Edit/Add Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl w-full max-w-md">
@@ -293,6 +367,138 @@ export default function DoctorsPage() {
           </div>
         </div>
       )}
+
+      {/* Doctor Details Panel */}
+      <AnimatePresence>
+        {viewingDoctor && (
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            drag={!isExpanded}
+            dragMomentum={false}
+            className={isExpanded 
+              ? "fixed inset-0 z-50 bg-white flex flex-col" 
+              : "fixed top-24 right-6 w-full max-w-lg bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[80vh] overflow-hidden"
+            }
+            style={{ cursor: isExpanded ? "default" : "default" }}
+          >
+            <div 
+              className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-primary text-white rounded-t-xl cursor-move"
+            >
+              <div>
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  Dr. {viewingDoctor.firstName}
+                </h3>
+                <p className="text-white/80 text-xs">Assigned Tasks Overview</p>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="text-white/70 hover:text-white transition-colors cursor-pointer mr-2"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  title={isExpanded ? "Collapse" : "Expand"}
+                >
+                  {isExpanded ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5M15 15l5.25 5.25" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                    </svg>
+                  )}
+                </button>
+                <button 
+                  onClick={() => { setViewingDoctor(null); setIsExpanded(false); }}
+                  className="text-white/70 hover:text-white transition-colors cursor-pointer"
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div 
+              className="p-0 overflow-y-auto flex-1 cursor-default bg-gray-50"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              {loadingTasks ? (
+                <div className="flex justify-center p-8">
+                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {/* Assigned Patients Section */}
+                  <div className="bg-white mb-2">
+                    <div className="px-4 py-2 bg-gray-100 font-medium text-xs text-gray-500 uppercase">
+                      Assigned Patients ({doctorTasks.patients.length})
+                    </div>
+                    {doctorTasks.patients.length === 0 ? (
+                      <p className="p-4 text-center text-sm text-gray-500">No active patients.</p>
+                    ) : (
+                      doctorTasks.patients.map(patient => (
+                        <div key={patient._id} className="p-3 hover:bg-gray-50 flex justify-between items-center">
+                          <div>
+                            <p className="font-medium text-sm text-gray-900">{patient.firstName} {patient.lastName}</p>
+                            <p className="text-xs text-gray-500">{patient.email}</p>
+                          </div>
+                          <span className={`px-2 py-0.5 text-xs rounded-full ${
+                            patient.accountStatus === 'active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {patient.accountStatus}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Assigned Surveys Section */}
+                  <div className="bg-white">
+                    <div className="px-4 py-2 bg-gray-100 font-medium text-xs text-gray-500 uppercase">
+                      Assigned Survey Tasks ({doctorTasks.surveys.length})
+                    </div>
+                     {doctorTasks.surveys.length === 0 ? (
+                      <p className="p-4 text-center text-sm text-gray-500">No survey tasks assigned.</p>
+                    ) : (
+                      doctorTasks.surveys.map(survey => (
+                        <div key={survey._id} className="p-3 hover:bg-gray-50 border-b border-gray-50 last:border-0">
+                          <div className="flex justify-between items-start mb-1">
+                            <span className={`px-2 py-0.5 text-xs rounded-full ${
+                                survey.status === 'new' ? 'bg-purple-100 text-purple-700' : 
+                                survey.status === 'reviewed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                            }`}>
+                              {survey.status}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {new Date(survey.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="text-sm font-medium text-gray-900">
+                            Patient: {survey.userId?.firstName} {survey.userId?.lastName}
+                          </p>
+                          {survey.serviceId && (
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              Service: {survey.serviceId.name}
+                            </p>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="p-4 bg-white border-t border-gray-100 text-center text-xs text-gray-500">
+              Drag header to move panel
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

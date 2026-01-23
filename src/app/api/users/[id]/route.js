@@ -52,6 +52,17 @@ export async function PUT(request, { params }) {
         { status: 404 }
       );
     }
+
+    // Sync assignedDoctor to SurveyResponse if it was updated
+    if (body.assignedDoctorId !== undefined) {
+      // Find survey response for this user
+      // Assuming one active survey response per user for now, or updating all
+      const SurveyResponse = (await import("@/models/SurveyResponse")).default;
+      await SurveyResponse.updateMany(
+        { userId: id },
+        { assignedDoctor: body.assignedDoctorId }
+      );
+    }
     
     return NextResponse.json({ success: true, data: user });
   } catch (error) {

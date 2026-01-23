@@ -34,6 +34,12 @@ export default function PatientDetailPage() {
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Expansion states
+  const [isAddModalExpanded, setIsAddModalExpanded] = useState(false);
+  const [isNoteModalExpanded, setIsNoteModalExpanded] = useState(false);
+  const [isViewNoteExpanded, setIsViewNoteExpanded] = useState(false);
+  const [isSubmissionExpanded, setIsSubmissionExpanded] = useState(false);
   
   const noteTypes = [
     { name: 'Phone Visit', icon: '📞' },
@@ -122,6 +128,7 @@ export default function PatientDetailPage() {
       if (data.success) {
         setNotes(prevNotes => [data.data, ...prevNotes]);
         setShowNoteModal(false);
+        setIsNoteModalExpanded(false);
       } else {
         alert("Failed to create note: " + data.error);
       }
@@ -676,15 +683,32 @@ export default function PatientDetailPage() {
               className="px-6 py-4 border-b border-gray-100 flex items-center justify-between cursor-move"
             >
               <h3 className="text-lg font-semibold text-gray-900">Add New Item</h3>
-              <button 
-                onClick={() => setShowAddModal(false)} 
-                className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-                onPointerDown={(e) => e.stopPropagation()}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setIsAddModalExpanded(!isAddModalExpanded)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer mr-2"
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  {isAddModalExpanded ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5M15 15l5.25 5.25" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                    </svg>
+                  )}
+                </button>
+                <button 
+                  onClick={() => { setShowAddModal(false); setIsAddModalExpanded(false); }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
             
             {/* Modal Body */}
@@ -757,15 +781,32 @@ export default function PatientDetailPage() {
                 <span>{noteTypes.find(n => n.name === selectedNoteType)?.icon}</span>
                 {selectedNoteType}
               </h3>
-              <button 
-                onClick={() => setShowNoteModal(false)} 
-                className="text-white/70 hover:text-white transition-colors cursor-pointer"
-                onPointerDown={(e) => e.stopPropagation()}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setIsNoteModalExpanded(!isNoteModalExpanded)}
+                  className="text-white/70 hover:text-white transition-colors cursor-pointer mr-2"
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  {isNoteModalExpanded ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5M15 15l5.25 5.25" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                    </svg>
+                  )}
+                </button>
+                <button 
+                  onClick={() => { setShowNoteModal(false); setIsNoteModalExpanded(false); }}
+                  className="text-white/70 hover:text-white transition-colors cursor-pointer"
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
             
             <div 
@@ -822,15 +863,32 @@ export default function PatientDetailPage() {
                 <span>{noteTypes.find(n => n.name === viewingNote.type)?.icon}</span>
                 {viewingNote.type}
               </h3>
-              <button 
-                onClick={() => setViewingNote(null)} 
-                className="text-white/70 hover:text-white transition-colors cursor-pointer"
-                onPointerDown={(e) => e.stopPropagation()}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setIsViewNoteExpanded(!isViewNoteExpanded)}
+                  className="text-white/70 hover:text-white transition-colors cursor-pointer mr-2"
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  {isViewNoteExpanded ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5M15 15l5.25 5.25" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                    </svg>
+                  )}
+                </button>
+                <button 
+                  onClick={() => { setViewingNote(null); setIsViewNoteExpanded(false); }}
+                  className="text-white/70 hover:text-white transition-colors cursor-pointer"
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
             
             <div 
@@ -860,13 +918,13 @@ export default function PatientDetailPage() {
               
               <div className="flex gap-3 mt-6">
                 <button
-                  onClick={() => setViewingNote(null)}
+                  onClick={() => { setViewingNote(null); setIsViewNoteExpanded(false); }}
                   className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                 >
                   Close
                 </button>
                 <button
-                  onClick={() => { handleDeleteNote(viewingNote._id); setViewingNote(null); }}
+                  onClick={() => { handleDeleteNote(viewingNote._id); setViewingNote(null); setIsViewNoteExpanded(false); }}
                   className="px-4 py-2.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors font-medium"
                 >
                   Delete
@@ -912,15 +970,32 @@ export default function PatientDetailPage() {
                   </span>
                 </div>
               </div>
-              <button 
-                onClick={() => setViewingSubmission(null)} 
-                className="text-white/70 hover:text-white transition-colors cursor-pointer"
-                onPointerDown={(e) => e.stopPropagation()}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setIsSubmissionExpanded(!isSubmissionExpanded)}
+                  className="text-white/70 hover:text-white transition-colors cursor-pointer mr-2"
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  {isSubmissionExpanded ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5M15 15l5.25 5.25" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                    </svg>
+                  )}
+                </button>
+                <button 
+                  onClick={() => { setViewingSubmission(null); setIsSubmissionExpanded(false); }}
+                  className="text-white/70 hover:text-white transition-colors cursor-pointer"
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
             
             <div 
@@ -997,7 +1072,7 @@ export default function PatientDetailPage() {
                 {/* Action Buttons */}
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setViewingSubmission(null)}
+                    onClick={() => { setViewingSubmission(null); setIsSubmissionExpanded(false); }}
                     className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors font-medium"
                   >
                     Close

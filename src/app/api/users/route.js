@@ -30,6 +30,7 @@ export async function GET(request) {
     // Get query params
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
+    const assignedDoctorId = searchParams.get("assignedDoctorId");
 
     let query = { role: 'user' };
 
@@ -41,6 +42,7 @@ export async function GET(request) {
     } 
     // If admin, can filter by status
     else if (currentUser.role === 'admin') {
+      if (assignedDoctorId) query.assignedDoctorId = assignedDoctorId;
       if (status) {
         query.accountStatus = status;
       } else {

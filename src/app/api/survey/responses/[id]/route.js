@@ -29,7 +29,7 @@ export async function PUT(request, { params }) {
     const updateData = {};
     if (body.status) updateData.status = body.status;
     if (body.answers) updateData.answers = body.answers;
-    if (body.assignedDoctor) updateData.assignedDoctor = body.assignedDoctor;
+    if (body.assignedDoctor !== undefined) updateData.assignedDoctor = body.assignedDoctor;
     
     const response = await SurveyResponse.findByIdAndUpdate(
       id,
@@ -39,6 +39,15 @@ export async function PUT(request, { params }) {
     
     if (!response) {
       return NextResponse.json({ success: false, error: "Response not found" }, { status: 404 });
+    }
+
+    // Sync assignedDoctor to User if it was updated
+    if (body.assignedDoctor !== undefined && response.userId) {
+      const User = (await import("@/models/User")).default;
+      await User.findByIdAndUpdate(
+        response.userId,
+        { assignedDoctorId: body.assignedDoctor }
+      );
     }
     
     return NextResponse.json({ success: true, data: response });

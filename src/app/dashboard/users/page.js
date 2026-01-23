@@ -7,13 +7,10 @@ import { useRouter } from "next/navigation";
 export default function UsersPage() {
   const router = useRouter();
   const [users, setUsers] = useState([]);
-  const [doctors, setDoctors] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [showAssignModal, setShowAssignModal] = useState(false);
-  const [assigningUser, setAssigningUser] = useState(null);
-  const [selectedDoctorId, setSelectedDoctorId] = useState("");
   const [resending, setResending] = useState(null);
   const [currentUserRole, setCurrentUserRole] = useState(null);
 
@@ -28,18 +25,7 @@ export default function UsersPage() {
       const data = await res.json();
       if (data.success) {
         setCurrentUserRole(data.data.role);
-        if (data.data.role === 'admin') {
-          fetchDoctors();
-        }
       }
-    } catch (e) { console.error(e); }
-  };
-
-  const fetchDoctors = async () => {
-    try {
-      const res = await fetch("/api/doctors");
-      const data = await res.json();
-      if (data.success) setDoctors(data.data);
     } catch (e) { console.error(e); }
   };
 
@@ -108,34 +94,6 @@ export default function UsersPage() {
     setShowModal(true);
   };
 
-  const openAssignModal = (user) => {
-    setAssigningUser(user);
-    setSelectedDoctorId(user.assignedDoctorId?._id || user.assignedDoctorId || "");
-    setShowAssignModal(true);
-  }
-
-  const handleAssignDoctor = async () => {
-    try {
-      const res = await fetch(`/api/users/${assigningUser._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        // If empty string, send null to unassign
-        body: JSON.stringify({ assignedDoctorId: selectedDoctorId || null }),
-      });
-      
-      const data = await res.json();
-      if (data.success) {
-        fetchUsers();
-        setShowAssignModal(false);
-        setAssigningUser(null);
-      } else {
-        alert(data.error);
-      }
-    } catch (error) {
-      alert("Failed to assign doctor");
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -183,9 +141,6 @@ export default function UsersPage() {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                {currentUserRole === 'admin' && (
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Doctor</th>
-                )}
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -209,27 +164,7 @@ export default function UsersPage() {
                     <p className="text-sm text-gray-900">{user.phone || '-'}</p>
                     <p className="text-sm text-gray-500">{user.sex} • {user.birthday ? new Date(user.birthday).toLocaleDateString() : 'N/A'}</p>
                   </td>
-                  {currentUserRole === 'admin' && (
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {user.assignedDoctorId ? (
-                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                           <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
-                           Dr. {user.assignedDoctorId.firstName} {user.assignedDoctorId.lastName}
-                         </span>
-                      ) : (
-                        <span className="text-gray-400 italic">Unassigned</span>
-                      )}
-                    </td>
-                  )}
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    {currentUserRole === 'admin' && (
-                      <button
-                        onClick={() => openAssignModal(user)}
-                        className="text-purple-600 hover:text-purple-800 mr-3"
-                      >
-                        Assign
-                      </button>
-                    )}
                     <Link
                       href={`/dashboard/users/${user._id}`}
                       className="text-primary hover:text-primary/80 mr-3"
@@ -251,53 +186,6 @@ export default function UsersPage() {
           </table>
         )}
       </div>
-
-      {/* Assign Doctor Modal */}
-      {showAssignModal && assigningUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-md">
-            <div className="p-6 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-secondary">Assign Doctor</h3>
-              <p className="text-sm text-gray-500">
-                Select a doctor for {assigningUser.firstName} {assigningUser.lastName}
-              </p>
-            </div>
-            
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Doctor</label>
-                <select
-                  value={selectedDoctorId}
-                  onChange={(e) => setSelectedDoctorId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                >
-                  <option value="">-- No Doctor Assigned --</option>
-                  {doctors.map((doc) => (
-                    <option key={doc._id} value={doc._id}>
-                      Dr. {doc.firstName} {doc.lastName} ({doc.email})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => setShowAssignModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAssignDoctor}
-                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
-                >
-                  Save Assignment
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

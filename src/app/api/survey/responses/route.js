@@ -12,10 +12,12 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const status = searchParams.get('status');
+    const assignedDoctor = searchParams.get('assignedDoctor');
     
     const query = {};
     if (userId) query.userId = userId;
     if (status) query.status = status;
+    if (assignedDoctor) query.assignedDoctor = assignedDoctor;
     
     const responses = await SurveyResponse.find(query)
       .populate('serviceId', 'name image')
