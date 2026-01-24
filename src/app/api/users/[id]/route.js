@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
+import SurveyResponse from "@/models/SurveyResponse";
 import { sendCredentialsEmail, generatePassword } from "@/lib/email";
 
 // GET single user
@@ -9,7 +10,7 @@ export async function GET(request, { params }) {
     await dbConnect();
     const { id } = await params;
     
-    const user = await User.findById(id)
+    let user = await User.findById(id)
       .select('-password')
       .populate('surveyResponseId');
     
@@ -18,6 +19,36 @@ export async function GET(request, { params }) {
         { success: false, error: "User not found" },
         { status: 404 }
       );
+    }
+
+    // Self-healing: Create surveyResponse if missing
+    if (!user.surveyResponseId) {
+      console.log(`Creating missing SurveyResponse for user ${user._id}`);
+      const surveyResponse = await SurveyResponse.create({
+        userInfo: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phone,
+          sex: user.sex,
+          birthday: user.birthday,
+          address: user.address,
+          city: user.city,
+          state: user.state,
+          zipCode: user.zipCode
+        },
+        answers: [],
+        status: "new",
+        userId: user._id,
+      });
+
+      user.surveyResponseId = surveyResponse._id;
+      await user.save();
+      
+      // Re-fetch populated user
+      user = await User.findById(id)
+        .select('-password')
+        .populate('surveyResponseId');
     }
     
     return NextResponse.json({ success: true, data: user });

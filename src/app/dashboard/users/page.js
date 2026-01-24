@@ -14,6 +14,23 @@ export default function UsersPage() {
   const [resending, setResending] = useState(null);
   const [currentUserRole, setCurrentUserRole] = useState(null);
 
+  // Create User State
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newUser, setNewUser] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "", // Will allow setting password
+    phone: "",
+    sex: "Male",
+    birthday: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: ""
+  });
+
   useEffect(() => {
     fetchUsers();
     checkRole();
@@ -68,6 +85,40 @@ export default function UsersPage() {
     }
   };
 
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    if (!newUser.email || !newUser.password || !newUser.firstName || !newUser.lastName) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    setCreating(true);
+    try {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newUser),
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        alert("Patient created successfully!");
+        setShowCreateModal(false);
+        setNewUser({
+          firstName: "", lastName: "", email: "", password: "", phone: "",
+          sex: "Male", birthday: "", address: "", city: "", state: "", zipCode: ""
+        });
+        fetchUsers();
+      } else {
+        alert(`Failed: ${data.error}`);
+      }
+    } catch (error) {
+      alert("Failed to create user");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const handleDelete = async (userId) => {
     if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
       return;
@@ -116,8 +167,22 @@ export default function UsersPage() {
               : 'Managing active patients and doctor assignments.'}
           </p>
         </div>
-        <div className="text-sm text-gray-500">
-          Total: {users.length} patients
+        
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-gray-500">
+            Total: {users.length} patients
+          </div>
+          {currentUserRole === 'admin' && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Create Patient
+            </button>
+          )}
         </div>
       </div>
 
@@ -186,6 +251,166 @@ export default function UsersPage() {
           </table>
         )}
       </div>
+      {/* Create Patient Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900">Register New Patient</h3>
+              <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <form onSubmit={handleCreateUser} className="p-6 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="md:col-span-2">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-2 border-b border-gray-100 pb-1">Account Information</h4>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newUser.firstName}
+                    onChange={(e) => setNewUser({...newUser, firstName: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newUser.lastName}
+                    onChange={(e) => setNewUser({...newUser, lastName: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email (Login ID) *</label>
+                  <input
+                    type="email"
+                    required
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                    placeholder="Set temporary password"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  />
+                </div>
+
+                <div className="md:col-span-2 mt-2">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-2 border-b border-gray-100 pb-1">Personal Details</h4>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                  <input
+                    type="tel"
+                    value={newUser.phone}
+                    onChange={(e) => setNewUser({...newUser, phone: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Sex</label>
+                  <select
+                    value={newUser.sex}
+                    onChange={(e) => setNewUser({...newUser, sex: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Birthday</label>
+                  <input
+                    type="date"
+                    value={newUser.birthday}
+                    onChange={(e) => setNewUser({...newUser, birthday: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+
+                <div className="md:col-span-2 mt-2">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-2 border-b border-gray-100 pb-1">Address</h4>
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
+                  <input
+                    type="text"
+                    value={newUser.address}
+                    onChange={(e) => setNewUser({...newUser, address: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <input
+                    type="text"
+                    value={newUser.city}
+                    onChange={(e) => setNewUser({...newUser, city: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                    <input
+                      type="text"
+                      value={newUser.state}
+                      onChange={(e) => setNewUser({...newUser, state: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Zip</label>
+                    <input
+                      type="text"
+                      value={newUser.zipCode}
+                      onChange={(e) => setNewUser({...newUser, zipCode: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-70"
+                >
+                  {creating ? "Creating..." : "Create Patient"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
