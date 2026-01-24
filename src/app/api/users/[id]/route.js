@@ -45,10 +45,17 @@ export async function GET(request, { params }) {
       user.surveyResponseId = surveyResponse._id;
       await user.save();
       
+      user.surveyResponseId = surveyResponse._id;
+      await user.save();
+      
       // Re-fetch populated user
       user = await User.findById(id)
         .select('-password')
-        .populate('surveyResponseId');
+        .populate('surveyResponseId')
+        .lean();
+    } else {
+      // If we didn't refetch, let's convert the original doc to object
+      user = user.toObject();
     }
     
     return NextResponse.json({ success: true, data: user });

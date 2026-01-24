@@ -27,6 +27,15 @@ const SurveyResponseSchema = new mongoose.Schema({
     },
     questionText: String,
     answer: mongoose.Schema.Types.Mixed,
+    addedBy: {
+      name: String,
+      role: String,
+      id: mongoose.Schema.Types.ObjectId,
+    },
+    addedAt: {
+      type: Date,
+      default: Date.now
+    }
   }],
   status: {
     type: String,

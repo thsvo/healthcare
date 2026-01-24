@@ -13,6 +13,7 @@ export default function PatientDetailPage() {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [resending, setResending] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   
   // Add Item Modal state
   const [showAddModal, setShowAddModal] = useState(false);
@@ -62,31 +63,48 @@ export default function PatientDetailPage() {
 
   const fetchData = async () => {
     try {
-      const [userRes, categoriesRes, questionsRes, notesRes, doctorsRes] = await Promise.all([
-        fetch(`/api/users/${params.id}`),
+      // Fetch user first to ensure we catch critical errors
+      console.log("Fetching user data...");
+      const userRes = await fetch(`/api/users/${params.id}`);
+      const userData = await userRes.json();
+      
+      if (!userData.success) {
+        console.error("User API returned failure for ID:", params.id, userData);
+        throw new Error(userData.error || "Failed to fetch user");
+      }
+      
+      setUser(userData.data);
+      fetchSurveySubmissions(userData.data._id);
+
+      // Fetch other data in parallel
+      const [categoriesRes, questionsRes, notesRes, doctorsRes, meRes] = await Promise.all([
         fetch("/api/categories"),
         fetch("/api/survey/questions"),
         fetch(`/api/users/${params.id}/notes`),
         fetch("/api/doctors"),
+        fetch("/api/auth/me"),
       ]);
       
-      const userData = await userRes.json();
       const categoriesData = await categoriesRes.json();
       const questionsData = await questionsRes.json();
       const notesData = await notesRes.json();
       const doctorsData = await doctorsRes.json();
       
-      if (userData.success) {
-        setUser(userData.data);
-        // Fetch survey submissions for this user
-        fetchSurveySubmissions(userData.data._id);
-      }
       if (categoriesData.success) setCategories(categoriesData.data);
       if (questionsData.success) setQuestions(questionsData.data);
       if (notesData.success) setNotes(notesData.data);
       if (doctorsData.success) setDoctors(doctorsData.data);
+      
+      try {
+        const currentUserData = await meRes.json();
+        if (currentUserData.success) setCurrentUser(currentUserData.data);
+      } catch (e) {
+        console.warn("Failed to fetch current user:", e);
+      }
+
     } catch (error) {
       console.error("Failed to fetch data:", error);
+      // alert("Error loading user profile: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -213,6 +231,12 @@ export default function PatientDetailPage() {
       answer: newItemAnswer,
       categoryId: (addModalCategory && addModalCategory !== 'uncategorized') ? addModalCategory : null,
       questionId: null, // Custom item
+      addedBy: currentUser ? {
+        name: `${currentUser.firstName} ${currentUser.lastName}`,
+        role: currentUser.role,
+        id: currentUser._id
+      } : null,
+      addedAt: new Date()
     };
 
     const currentAnswers = user.surveyResponseId.answers || [];
@@ -502,14 +526,27 @@ export default function PatientDetailPage() {
                           : answer.answer || <span className="text-gray-400 italic">No answer</span>}
                       </p>
                     </div>
-                    <button 
-                      onClick={() => handleDeleteItem(answer._id)}
-                      className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                      </svg>
-                    </button>
+                    
+                    <div className="flex items-center gap-4">
+                      {answer.addedBy && (
+                        <div className="text-right text-xs">
+                          <p className="text-gray-900 font-medium">{answer.addedBy.name}</p>
+                          <p className="text-gray-500 capitalize">{answer.addedBy.role}</p>
+                          <p className="text-gray-400">
+                            {answer.addedAt ? new Date(answer.addedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : ''}
+                          </p>
+                        </div>
+                      )}
+                      
+                      <button 
+                        onClick={() => handleDeleteItem(answer._id)}
+                        className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
