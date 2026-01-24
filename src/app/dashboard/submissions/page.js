@@ -10,6 +10,10 @@ export default function SubmissionsPage() {
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Dedicated Assign Modal State
+  const [submissionForAssign, setSubmissionForAssign] = useState(null);
+  const [doctorForAssign, setDoctorForAssign] = useState("");
 
   useEffect(() => {
     fetchSubmissions();
@@ -157,6 +161,17 @@ export default function SubmissionsPage() {
     }
   };
 
+  const handleOpenAssignModal = (submission) => {
+    setSubmissionForAssign(submission);
+    setDoctorForAssign(submission.assignedDoctor?._id || "");
+  };
+
+  const handleAssignSubmit = async () => {
+    if (!submissionForAssign) return;
+    await handleAssignDoctor(submissionForAssign._id, doctorForAssign);
+    setSubmissionForAssign(null);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -255,6 +270,15 @@ export default function SubmissionsPage() {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      onClick={() => handleOpenAssignModal(sub)}
+                      className="text-gray-500 hover:text-primary mr-3"
+                      title="Assign Doctor"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM4 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+                      </svg>
+                    </button>
                     <button
                       onClick={() => setSelectedSubmission(sub)}
                       className="text-primary hover:text-primary/80 mr-3"
@@ -460,6 +484,89 @@ export default function SubmissionsPage() {
               </div>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Dedicated Assign Modal */}
+      <AnimatePresence>
+        {submissionForAssign && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSubmissionForAssign(null)}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              drag
+              dragMomentum={false}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+            >
+              <div 
+                className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden pointer-events-auto"
+              >
+                <div 
+                  className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50 cursor-move"
+                  onPointerDown={(e) => e.preventDefault()}
+                >
+                  <h3 className="font-semibold text-gray-900">Assign Doctor</h3>
+                  <button 
+                    onClick={() => setSubmissionForAssign(null)}
+                    className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                    onPointerDown={(e) => e.stopPropagation()}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <div 
+                  className="p-4 cursor-default"
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <p className="text-sm text-gray-500 mb-4">
+                    Assign a doctor to the submission from <span className="font-medium text-gray-900">{submissionForAssign.userInfo?.firstName || submissionForAssign.userId?.firstName} {submissionForAssign.userInfo?.lastName || submissionForAssign.userId?.lastName}</span>.
+                  </p>
+                  
+                  <div className="mb-4">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Select Doctor</label>
+                    <select
+                      value={doctorForAssign}
+                      onChange={(e) => setDoctorForAssign(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                    >
+                      <option value="">Select Doctor...</option>
+                      {doctors.map(doc => (
+                        <option key={doc._id} value={doc._id}>
+                          Dr. {doc.firstName} {doc.lastName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      onClick={() => setSubmissionForAssign(null)}
+                      className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleAssignSubmit}
+                      className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                      Save Assignment
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>

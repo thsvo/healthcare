@@ -370,6 +370,12 @@ export default function PatientDetailPage() {
             <span className="text-white/60 block">Location</span>
             <span className="font-medium">{user.city}, {user.state}</span>
           </div>
+          <div className="col-span-2 md:col-span-1">
+            <span className="text-white/60 block">Address</span>
+            <span className="font-medium truncate block" title={`${user.address || ''} ${user.addressLine2 || ''}`}>
+              {user.address || '-'} {user.addressLine2 || ''}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -431,23 +437,7 @@ export default function PatientDetailPage() {
             )}
           </div>
 
-          {/* Address Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-teal-600">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-                </svg>
-                Address
-              </h3>
-            </div>
-            <div className="p-4">
-              <p className="text-gray-900">{user.address}</p>
-              {user.addressLine2 && <p className="text-gray-600">{user.addressLine2}</p>}
-              <p className="text-gray-600">{user.city}, {user.state} {user.zipCode}</p>
-            </div>
-          </div>
+
 
           {/* Survey Answers by Category */}
           {Object.keys(answersByCategory).sort((a, b) => {
