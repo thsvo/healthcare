@@ -30,6 +30,39 @@ export async function PUT(request, { params }) {
     if (body.status) updateData.status = body.status;
     if (body.answers) updateData.answers = body.answers;
     if (body.assignedDoctor !== undefined) updateData.assignedDoctor = body.assignedDoctor;
+    if (body.followUp !== undefined) updateData.followUp = body.followUp;
+    if (body.refillReminder !== undefined) updateData.refillReminder = body.refillReminder;
+    if (body.providerNote !== undefined) updateData.providerNote = body.providerNote;
+
+    // Handle new chat message
+    if (body.newMessage) {
+        console.log("Received new message payload:", body.newMessage);
+        const message = {
+          senderId: body.newMessage.senderId,
+          senderName: body.newMessage.senderName,
+          senderRole: body.newMessage.senderRole,
+          text: body.newMessage.text,
+          createdAt: new Date()
+        };
+        
+        const response = await SurveyResponse.findByIdAndUpdate(
+            id,
+            { 
+              $set: updateData,
+              $push: { messages: message } 
+            },
+            { new: true, runValidators: true }
+        ).populate({ path: 'assignedDoctor', select: 'firstName lastName email', strictPopulate: false });
+        
+        console.log("Updated response messages count:", response?.messages?.length);
+
+         // Sync assignedDoctor if present
+        if (body.assignedDoctor !== undefined && response.userId) {
+            const User = (await import("@/models/User")).default;
+            await User.findByIdAndUpdate(response.userId, { assignedDoctorId: body.assignedDoctor });
+        }
+        return NextResponse.json({ success: true, data: response });
+    }
     
     const response = await SurveyResponse.findByIdAndUpdate(
       id,

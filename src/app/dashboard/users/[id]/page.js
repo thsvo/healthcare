@@ -34,6 +34,10 @@ export default function PatientDetailPage() {
   const [viewingSubmission, setViewingSubmission] = useState(null);
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctor, setSelectedDoctor] = useState("");
+  const [followUp, setFollowUp] = useState("");
+  const [refillReminder, setRefillReminder] = useState("");
+  const [providerNote, setProviderNote] = useState("");
+
   const [actionLoading, setActionLoading] = useState(false);
 
   // Expansion states
@@ -673,7 +677,13 @@ export default function PatientDetailPage() {
                     submission.status === 'archived' ? 'border-red-300 hover:bg-red-50' :
                     'border-purple-300 hover:bg-purple-50'
                   }`}
-                  onClick={() => setViewingSubmission(submission)}
+                  onClick={() => {
+                    setViewingSubmission(submission);
+                    setSelectedDoctor(submission.assignedDoctor?._id || "");
+                    setFollowUp(submission.followUp || "");
+                    setRefillReminder(submission.refillReminder || "");
+                    setProviderNote(submission.providerNote || "");
+                  }}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
@@ -700,6 +710,32 @@ export default function PatientDetailPage() {
                       <p className="text-xs text-gray-500 mt-1">
                         {new Date(submission.createdAt).toLocaleDateString()}
                       </p>
+                      {/* Show Provider Note & Follow Ups in Timeline */ }
+                      {(submission.providerNote || submission.followUp || submission.refillReminder) && (
+                        <div className="mt-2 pt-2 border-t border-gray-100 text-xs">
+                          {submission.providerNote && (
+                            <p className="text-gray-700 italic mb-1">"{submission.providerNote}"</p>
+                          )}
+                          <div className="flex gap-3 text-gray-500">
+                            {submission.followUp && (
+                              <span className="flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
+                                  <path fillRule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z" clipRule="evenodd" />
+                                </svg>
+                                Follow-up: {submission.followUp}
+                              </span>
+                            )}
+                            {submission.refillReminder && (
+                              <span className="flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
+                                  <path fillRule="evenodd" d="M10 2a6 6 0 0 0-6 6c0 1.887.454 3.665 1.257 5.234a.75.75 0 0 1 .044.653C3.52 17.633 1.82 20.25 1.82 20.25a.75.75 0 0 0 .93 1.05c3.219-1.393 5.48-3.09 6.273-4.102A6 6 0 1 0 10 2Zm-1.5 3a.75.75 0 0 1 .75.75v2.24l1.455.772a.75.75 0 1 1-.685 1.346l-1.875-.994a.75.75 0 0 1-.395-.678V5.75a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+                                </svg>
+                                Refill: {submission.refillReminder}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1292,13 +1328,16 @@ export default function PatientDetailPage() {
                 </div>
               </div>
               
-              <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-purple-600">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
-                </svg>
-                Questions & Answers ({viewingSubmission.answers?.length || 0})
-              </h4>
-              <div className="space-y-4 max-h-96 overflow-y-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between gap-4 mb-6">
+                  <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-purple-600">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                    </svg>
+                    Questions & Answers ({viewingSubmission.answers?.length || 0})
+                  </h4>
+              </div>
+              <div className="space-y-4 max-h-96 overflow-y-auto mb-8">
                 {viewingSubmission.answers?.length > 0 ? (
                   viewingSubmission.answers.map((qa, index) => (
                     <div key={index} className="border-l-4 border-purple-200 pl-4 py-2">
@@ -1317,97 +1356,297 @@ export default function PatientDetailPage() {
                 ) : (
                   <p className="text-gray-500 text-center py-4">No answers recorded</p>
                 )}
+
+
+                {/* 1. CHAT HISTORY SECTION */}
+                <div className="mt-8 border-t border-gray-100 pt-6">
+                    <h5 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-gray-400">
+                            <path fillRule="evenodd" d="M10 2c-2.236 0-4.43.18-6.57.524C1.993 2.755 1 4.014 1 5.426v5.148c0 1.413.993 2.67 2.43 2.902.848.137 1.705.248 2.57.331v3.443a.75.75 0 0 0 1.28.53l3.58-3.579a.78.78 0 0 1 .527-.224 41.202 41.202 0 0 0 5.183-.5c1.437-.232 2.43-1.49 2.43-2.903V5.426c0-1.413-.993-2.67-2.43-2.902A41.289 41.289 0 0 0 10 2Zm0 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2ZM8 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm5 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clipRule="evenodd" />
+                         </svg>
+                        Discussion History
+                    </h5>
+                    
+                    <div className="space-y-4 mb-6 max-h-80 overflow-y-auto pr-2">
+                        {/* Legacy Note Display */}
+                         {viewingSubmission.providerNote && !viewingSubmission.messages?.length && (
+                            <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-3 text-sm">
+                                <span className="text-yellow-700 font-semibold text-xs uppercase block mb-1">Legacy Note</span>
+                                <p className="text-gray-800">{viewingSubmission.providerNote}</p>
+                            </div>
+                         )}
+
+                        {/* Chat Messages */}
+                        {viewingSubmission.messages?.map((msg, idx) => {
+                             const isMe = msg.senderId === user._id; // Or check role if simple
+                             const isSystem = msg.senderRole === 'system';
+                             return (
+                                 <div key={idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                     <div className={`max-w-[85%] rounded-lg p-3 text-sm ${
+                                         isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                                     }`}>
+                                         <div className="flex items-center gap-2 mb-1 opacity-80 text-xs">
+                                             <span className="font-semibold">{msg.senderName || 'User'}</span>
+                                             <span>•</span>
+                                             <span>{new Date(msg.createdAt).toLocaleString()}</span>
+                                         </div>
+                                         <p className="whitespace-pre-wrap">{msg.text}</p>
+                                     </div>
+                                 </div>
+                             )
+                        })}
+                        
+                         {(!viewingSubmission.messages?.length && !viewingSubmission.providerNote) && (
+                            <p className="text-gray-400 text-sm text-center italic">No messages yet.</p>
+                         )}
+                    </div>
+                </div>
+
+                {/* 2. CLINICAL LOGISTICS SECTION (Follow Up / Refill) */}
+                <div className="mt-8 pt-6 border-t border-gray-100">
+                    <h5 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-blue-600">
+                           <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clipRule="evenodd" />
+                        </svg>
+                        Clinical Updates
+                    </h5>
+                     <div className="bg-blue-50/50 rounded-lg p-4 border border-blue-100">
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                           <div>
+                              <label className="block text-xs font-medium text-gray-500 mb-1">Follow Up</label>
+                              <select
+                                value={followUp}
+                                onChange={(e) => setFollowUp(e.target.value)}
+                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                               <option value="">Select interval</option>
+                               <option value="7 Days">7 Days</option>
+                               <option value="14 Days">14 Days</option>
+                               <option value="30 Days">30 Days</option>
+                               <option value="None">None</option>
+                              </select>
+                            </div>
+                            
+                            <div>
+                              <label className="block text-xs font-medium text-gray-500 mb-1">Refill Reminder</label>
+                               <select
+                                value={refillReminder}
+                                onChange={(e) => setRefillReminder(e.target.value)}
+                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                               <option value="">Select interval</option>
+                               <option value="4 weeks">4 weeks</option>
+                               <option value="5 weeks">5 weeks</option>
+                               <option value="6 weeks">6 weeks</option>
+                               <option value="8 weeks">8 weeks</option>
+                               <option value="10 weeks">10 weeks</option>
+                               <option value="12 weeks">12 weeks</option>
+                               <option value="13 weeks">13 weeks</option>
+                               <option value="None">None</option>
+                              </select>
+                            </div>
+                        </div>
+                        <div className="flex justify-end">
+                            <button
+                                onClick={async () => {
+                                  setActionLoading(true);
+                                  try {
+                                    await fetch(`/api/survey/responses/${viewingSubmission._id}`, {
+                                      method: "PUT",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ followUp, refillReminder }),
+                                    });
+                                    fetchSurveySubmissions(user._id);
+                                    alert("Clinical details updated!");
+                                  } catch (e) { alert("Failed to update details"); }
+                                  setActionLoading(false);
+                                }}
+                                disabled={actionLoading}
+                                className="px-4 py-2 bg-white border border-blue-200 text-blue-700 text-xs font-medium rounded-lg hover:bg-blue-50 transition-colors shadow-sm"
+                            >
+                                Update Clinical Details
+                            </button>
+                        </div>
+                     </div>
+                </div>
+
+                {/* 3. MESSAGE COMPOSER (Chat Only) */}
+                <div className="mt-6 pt-6 border-t border-gray-100 bg-white">
+                    <h5 className="text-sm font-semibold text-gray-900 mb-3">Send Message</h5>
+                    <div className="space-y-4">
+                        <div>
+                           <textarea
+                             value={providerNote}
+                             onChange={(e) => setProviderNote(e.target.value)}
+                             placeholder="Write a message or internal note..."
+                             rows={2}
+                             className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none resize-none focus:ring-2 focus:ring-purple-500"
+                           />
+                        </div>
+
+                        <div className="flex justify-end">
+                            <button
+                                onClick={async () => {
+                                  if (!providerNote.trim()) return; // Prevent empty sends
+                                  setActionLoading(true);
+                                  try {
+                                    const payload = {
+                                        newMessage: {
+                                            senderId: user._id, 
+                                            senderName: `${user.firstName} ${user.lastName}`,
+                                            senderRole: user.role, 
+                                            text: providerNote
+                                        }
+                                    };
+
+                                    const res = await fetch(`/api/survey/responses/${viewingSubmission._id}`, {
+                                      method: "PUT",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify(payload),
+                                    });
+                                    const data = await res.json();
+                                    
+                                    if (data.success) {
+                                        setViewingSubmission(data.data);
+                                        fetchSurveySubmissions(user._id);
+                                        setProviderNote("");
+                                    } else {
+                                        alert("Failed to send message");
+                                    }
+                                  } catch (e) { alert("Failed to send message"); }
+                                  setActionLoading(false);
+                                }}
+                                disabled={actionLoading}
+                                className="px-6 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                            >
+                                Send Message
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                                  <path d="M3.105 2.289a.75.75 0 0 0-.826.95l1.414 4.925A1.5 1.5 0 0 0 5.135 9.25h6.115a.75.75 0 0 1 0 1.5H5.135a1.5 1.5 0 0 0-1.442 1.086l-1.414 4.926a.75.75 0 0 0 .826.95 28.896 28.896 0 0 0 15.293-7.154.75.75 0 0 0 0-1.115A28.897 28.897 0 0 0 3.105 2.289Z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 4. ASSIGN DOCTOR (Separate Line Below) */}
+                <div className="mt-6 pt-6 border-t border-gray-100 flex items-end gap-3">
+                     <div className="flex-1">
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Assign Doctor to Case</label>
+                      <div className="relative">
+                          <select
+                            value={selectedDoctor}
+                            onChange={(e) => setSelectedDoctor(e.target.value)}
+                            className="w-full pl-3 pr-10 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none appearance-none"
+                          >
+                            <option value="">-- No Doctor Assigned --</option>
+                            {doctors.map(doc => (
+                              <option key={doc._id} value={doc._id}>
+                                Dr. {doc.firstName} {doc.lastName}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                             <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                          </div>
+                      </div>
+                    </div>
+                    <button
+                        onClick={async () => {
+                           // Save only the doctor
+                            try {
+                                await fetch(`/api/survey/responses/${viewingSubmission._id}`, {
+                                  method: "PUT",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ assignedDoctor: selectedDoctor }),
+                                });
+                                fetchSurveySubmissions(user._id);
+                                alert("Doctor assigned!");
+                            } catch (e) { alert("Failed to assign doctor"); }
+                        }}
+                        className="px-4 py-2 text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg text-sm font-medium transition-colors"
+                    >
+                        Assign
+                    </button>
+                </div>
+
+
               </div>
             </div>
             
-            {/* Admin Actions Footer */}
+            {/* Admin Actions Footer - BUTTONS ONLY */}
             <div 
-              className="p-4 border-t border-gray-100 bg-gray-50"
+              className="p-4 border-t border-gray-100 bg-white flex justify-end gap-3"
               onPointerDown={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center gap-4">
-                {/* Assign Doctor */}
-                <div className="flex-1">
-                  <label className="block text-xs text-gray-500 mb-1">Assign Doctor</label>
-                  <select
-                    value={selectedDoctor}
-                    onChange={(e) => setSelectedDoctor(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
-                  >
-                    <option value="">Select Doctor...</option>
-                    {doctors.map(doc => (
-                      <option key={doc._id} value={doc._id}>
-                        Dr. {doc.firstName} {doc.lastName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => { setViewingSubmission(null); setIsSubmissionExpanded(false); }}
-                    className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors font-medium"
-                  >
-                    Close
-                  </button>
-                  {viewingSubmission.status !== 'archived' && (
-                    <button
-                      onClick={async () => {
-                        setActionLoading(true);
-                        try {
-                          await fetch(`/api/survey/responses/${viewingSubmission._id}`, {
-                            method: "PUT",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ status: 'archived' }),
-                          });
-                          setViewingSubmission(null);
-                          fetchSurveySubmissions(user._id);
-                        } catch (e) { alert("Failed to reject"); }
-                        setActionLoading(false);
-                      }}
-                      disabled={actionLoading}
-                      className="px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors font-medium disabled:opacity-50"
-                    >
-                      Reject
-                    </button>
-                  )}
-                  {viewingSubmission.status === 'new' && (
-                    <button
-                      onClick={async () => {
-                        setActionLoading(true);
-                        try {
-                          // Update submission status
-                          await fetch(`/api/survey/responses/${viewingSubmission._id}`, {
-                            method: "PUT",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ status: 'reviewed' }),
-                          });
-                          // Update user status if needed
-                          if (user.accountStatus !== 'active') {
-                            await fetch(`/api/users/${user._id}`, {
-                              method: "PUT",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ 
-                                accountStatus: 'active',
-                                ...(selectedDoctor && { assignedDoctorId: selectedDoctor })
-                              }),
-                            });
-                          }
-                          setViewingSubmission(null);
-                          fetchSurveySubmissions(user._id);
-                          fetchData(); // Refresh user data
-                        } catch (e) { alert("Failed to approve"); }
-                        setActionLoading(false);
-                      }}
-                      disabled={actionLoading}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50"
-                    >
-                      {actionLoading ? "Processing..." : "Approve"}
-                    </button>
-                  )}
-                </div>
-              </div>
+              <button
+                onClick={() => { setViewingSubmission(null); setIsSubmissionExpanded(false); }}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              >
+                Close
+              </button>
+
+              {viewingSubmission.status !== 'archived' && (
+                <button
+                  onClick={async () => {
+                    setActionLoading(true);
+                    try {
+                      await fetch(`/api/survey/responses/${viewingSubmission._id}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ status: 'archived' }),
+                      });
+                      setViewingSubmission(null);
+                      fetchSurveySubmissions(user._id);
+                    } catch (e) { alert("Failed to reject"); }
+                    setActionLoading(false);
+                  }}
+                  disabled={actionLoading}
+                  className="px-4 py-2 text-red-600 border border-red-200 hover:bg-red-50 rounded-lg transition-colors font-medium disabled:opacity-50"
+                >
+                  Reject
+                </button>
+              )}
+              
+              {viewingSubmission.status === 'new' && (
+                <button
+                  onClick={async () => {
+                    setActionLoading(true);
+                    try {
+                      // Update submission status
+                      await fetch(`/api/survey/responses/${viewingSubmission._id}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ 
+                            status: 'reviewed',
+                            assignedDoctor: selectedDoctor,
+                            followUp,
+                            refillReminder,
+                            providerNote
+                        }),
+                      });
+                      // Update user status if needed
+                      if (user.accountStatus !== 'active') {
+                        await fetch(`/api/users/${user._id}`, {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ 
+                            accountStatus: 'active',
+                            ...(selectedDoctor && { assignedDoctorId: selectedDoctor })
+                          }),
+                        });
+                      }
+                      setViewingSubmission(null);
+                      fetchSurveySubmissions(user._id);
+                      fetchData(); // Refresh user data
+                    } catch (e) { alert("Failed to approve"); }
+                    setActionLoading(false);
+                  }}
+                  disabled={actionLoading}
+                  className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium disabled:opacity-50 shadow-sm"
+                >
+                  {actionLoading ? "Processing..." : "Approve"}
+                </button>
+              )}
             </div>
           </motion.div>
         )}

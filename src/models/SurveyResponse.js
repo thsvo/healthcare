@@ -54,8 +54,23 @@ const SurveyResponseSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
+  followUp: String,
+  refillReminder: String,
+  providerNote: String, // Legacy note field
+  messages: [{
+    senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    senderName: String,
+    senderRole: String, // 'admin', 'doctor', 'user'
+    text: String,
+    createdAt: { type: Date, default: Date.now }
+  }],
 }, {
   timestamps: true,
 });
+
+// Force model recompilation in dev to ensure schema updates are picked up
+if (process.env.NODE_ENV === 'development') {
+  delete mongoose.models.SurveyResponse;
+}
 
 export default mongoose.models.SurveyResponse || mongoose.model('SurveyResponse', SurveyResponseSchema);
