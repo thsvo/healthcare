@@ -95,7 +95,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { email, password, firstName, lastName, phone, sex, birthday, address, city, state, zipCode } = body;
+    const { email, password, firstName, lastName, phone, sex, birthday, address, city, state, zipCode, height, weight } = body;
 
     // Validation
     if (!email || !password || !firstName || !lastName) {
@@ -116,6 +116,8 @@ export async function POST(request) {
       lastName,
       phone,
       sex,
+      height,
+      weight,
       birthday,
       address,
       city,

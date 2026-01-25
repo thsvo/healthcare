@@ -41,6 +41,12 @@ const UserSchema = new mongoose.Schema({
     type: String,
     enum: ['Male', 'Female', 'Other', 'Prefer not to say'],
   },
+  height: {
+    type: String,
+  },
+  weight: {
+    type: String,
+  },
   phone: {
     type: String,
   },

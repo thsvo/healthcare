@@ -323,6 +323,18 @@ export default function PatientDetailPage() {
     return category ? category.name : 'General';
   };
 
+  const calculateAge = (birthday) => {
+    if (!birthday) return '';
+    const today = new Date();
+    const birthDate = new Date(birthday);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -398,9 +410,20 @@ export default function PatientDetailPage() {
             <span className="font-medium">{user.sex || '-'}</span>
           </div>
           <div>
+            <span className="text-white/60 block">Height/Weight</span>
+            <span className="font-medium">
+              {user.height || '-'}/{user.weight || '-'}
+            </span>
+          </div>
+          <div>
             <span className="text-white/60 block">Birthday</span>
             <span className="font-medium">
-              {user.birthday ? new Date(user.birthday).toLocaleDateString() : '-'}
+              {user.birthday ? (
+                <>
+                  {new Date(user.birthday).toLocaleDateString()}
+                  <span className="opacity-75 ml-1">({calculateAge(user.birthday)} yrs)</span>
+                </>
+              ) : '-'}
             </span>
           </div>
           <div>

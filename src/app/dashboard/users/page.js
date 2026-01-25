@@ -24,6 +24,8 @@ export default function UsersPage() {
     password: "", // Will allow setting password
     phone: "",
     sex: "Male",
+    height: "",
+    weight: "",
     birthday: "",
     address: "",
     city: "",
@@ -106,7 +108,7 @@ export default function UsersPage() {
         setShowCreateModal(false);
         setNewUser({
           firstName: "", lastName: "", email: "", password: "", phone: "",
-          sex: "Male", birthday: "", address: "", city: "", state: "", zipCode: ""
+          sex: "Male", height: "", weight: "", birthday: "", address: "", city: "", state: "", zipCode: ""
         });
         fetchUsers();
       } else {
@@ -345,6 +347,29 @@ export default function UsersPage() {
                     onChange={(e) => setNewUser({...newUser, birthday: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-primary"
                   />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Height</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 5'10"
+                      value={newUser.height}
+                      onChange={(e) => setNewUser({...newUser, height: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Weight</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 160 lbs"
+                      value={newUser.weight}
+                      onChange={(e) => setNewUser({...newUser, weight: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
                 </div>
 
                 <div className="md:col-span-2 mt-2">
