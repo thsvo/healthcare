@@ -42,6 +42,86 @@ export default function PatientDetailPage() {
   const [isViewNoteExpanded, setIsViewNoteExpanded] = useState(false);
   const [isSubmissionExpanded, setIsSubmissionExpanded] = useState(false);
   
+  // Document Upload state
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  
+  // Collapsible state for categories
+  const [expandedCategories, setExpandedCategories] = useState({});
+
+  const toggleCategory = (categoryId) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [categoryId]: !prev[categoryId]
+    }));
+  };
+  
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!selectedFile) {
+      alert("Please select a file.");
+      return;
+    }
+    
+    setUploading(true);
+    try {
+      // 1. Upload to ImgBB via API
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      
+      const uploadData = await uploadRes.json();
+      
+      if (!uploadData.success) {
+        throw new Error(uploadData.error || "Upload failed");
+      }
+      
+      // 2. Add document to user profile
+      const newDoc = {
+         url: uploadData.url,
+         name: selectedFile.name,
+         type: selectedFile.type,
+         uploadedAt: new Date()
+      };
+      
+      const updatedDocuments = [newDoc, ...(user.documents || [])];
+      
+      const updateRes = await fetch(`/api/users/${params.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ documents: updatedDocuments }),
+      });
+      
+      const updateData = await updateRes.json();
+      
+      if (updateData.success) {
+        setUser(updateData.data);
+        setShowUploadModal(false);
+        setSelectedFile(null);
+        alert("Document uploaded successfully!");
+      } else {
+        throw new Error(updateData.error);
+      }
+      
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("Failed to upload document: " + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+  
   const noteTypes = [
     { name: 'Phone Visit', icon: '📞' },
     { name: 'Triage Encounter', icon: '🏥' },
@@ -203,8 +283,8 @@ export default function PatientDetailPage() {
   };
 
   const handleAddItem = async () => {
-    if (!newItemQuestion.trim() || !newItemAnswer.trim()) {
-      alert("Please fill in both fields.");
+    if (!newItemQuestion.trim()) {
+      alert("Please enter a question or label.");
       return;
     }
 
@@ -240,7 +320,7 @@ export default function PatientDetailPage() {
     };
 
     const currentAnswers = user.surveyResponseId.answers || [];
-    const updatedAnswers = [...currentAnswers, newItem];
+    const updatedAnswers = [newItem, ...currentAnswers];
     
     await updateSurveyResponse(updatedAnswers);
     setShowAddModal(false);
@@ -442,60 +522,9 @@ export default function PatientDetailPage() {
       {/* Main Content - Two Column Layout */}
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Left Panel - Categories & Answers */}
-        <div className="lg:col-span-1 space-y-4">
+        <div className="lg:col-span-1 space-y-4 max-h-[calc(100vh)] overflow-y-auto pr-2 custom-scrollbar">
           
-          {/* Documents Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-teal-600">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                </svg>
-                Documents
-              </h3>
-              <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
-                {user.documents?.length || 0} files
-              </span>
-            </div>
-            
-            {user.documents?.length > 0 ? (
-              <div className="p-4 space-y-3">
-                {user.documents.map((doc, idx) => (
-                  <a 
-                    key={idx}
-                    href={doc.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center text-gray-500 shrink-0">
-                      {doc.type?.includes('image') ? (
-                        <img 
-                          src={doc.url} 
-                          alt={doc.name} 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                        </svg>
-                      )}
-                    </div>
-                    <div className="overflow-hidden">
-                      <p className="font-medium text-gray-900 text-sm truncate">{doc.name}</p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(doc.uploadedAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            ) : (
-              <div className="p-6 text-center text-gray-500 text-sm">
-                No documents uploaded.
-              </div>
-            )}
-          </div>
+
 
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold text-gray-900">Patient Data</h3>
@@ -530,6 +559,12 @@ export default function PatientDetailPage() {
                   <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
                     {answersByCategory[categoryId].length} items
                   </span>
+                  <button 
+                    onClick={() => toggleCategory(categoryId)}
+                    className="text-xs text-teal-600 hover:text-teal-700 font-medium ml-2 hover:underline"
+                  >
+                    {expandedCategories[categoryId] ? 'Collapse' : 'Expand'}
+                  </button>
                   <button
                     onClick={() => openAddModal(categoryId)}
                     className="text-primary hover:text-primary/80 text-sm font-medium ml-2 flex items-center gap-1"
@@ -539,7 +574,10 @@ export default function PatientDetailPage() {
                 </div>
               </div>
               <div className="divide-y divide-gray-100">
-                {answersByCategory[categoryId].map((answer, idx) => (
+                {(expandedCategories[categoryId] 
+                  ? answersByCategory[categoryId] 
+                  : answersByCategory[categoryId].slice(0, 1)
+                ).map((answer, idx) => (
                   <div key={idx} className="p-4 flex justify-between group">
                     <div>
                       <p className="text-sm text-gray-500 mb-1">{answer.questionText}</p>
@@ -592,60 +630,10 @@ export default function PatientDetailPage() {
           )}
         </div>
 
-        {/* Right Panel - Quick Info */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 content-start">
-          {/* Status Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-            <h3 className="font-semibold text-gray-900 mb-3">Account Status</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">Role</span>
-                <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 capitalize">
-                  {user.role}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">Survey Status</span>
-                <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
-                  {user.surveyResponseId?.status || 'new'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">Created</span>
-                <span className="text-sm text-gray-900">
-                  {new Date(user.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Actions Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-            <h3 className="font-semibold text-gray-900 mb-3">Actions</h3>
-            <div className="space-y-2">
-              <button
-                onClick={handleResendCredentials}
-                disabled={resending}
-                className="w-full px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {resending ? "Sending..." : "Resend Login Credentials"}
-              </button>
-              <button
-                onClick={() => {
-                  if (confirm("Delete this user?")) {
-                    fetch(`/api/users/${params.id}`, { method: "DELETE" })
-                      .then(() => router.push("/dashboard/users"));
-                  }
-                }}
-                className="w-full px-4 py-2 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50"
-              >
-                Delete User
-              </button>
-            </div>
-          </div>
-
-          {/* Create Note Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* Middle Panel - Create Note Only */}
+        <div className="lg:col-span-1 space-y-4">
+           {/* Create Note Section */}
+           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-4 py-3 bg-teal-700 text-white">
               <h3 className="font-semibold">Create a new note</h3>
             </div>
@@ -662,6 +650,10 @@ export default function PatientDetailPage() {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Right Panel - Timeline, Documents, Status, Actions */}
+        <div className="lg:col-span-1 space-y-4 max-h-[calc(100vh)] overflow-y-auto pr-2 custom-scrollbar">
 
           {/* Notes Timeline */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
@@ -745,8 +737,122 @@ export default function PatientDetailPage() {
               )}
             </div>
           </div>
+          
+          {/* Documents Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-teal-600">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                </svg>
+                Documents
+              </h3>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                  {user.documents?.length || 0} files
+                </span>
+                <button
+                  onClick={() => setShowUploadModal(true)}
+                  className="text-xs text-primary font-medium hover:text-primary/80 flex items-center gap-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  Upload
+                </button>
+              </div>
+            </div>
+            
+            {user.documents?.length > 0 ? (
+              <div className="p-4 space-y-3">
+                {user.documents.map((doc, idx) => (
+                  <a 
+                    key={idx}
+                    href={doc.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center text-gray-500 shrink-0">
+                      {doc.type?.includes('image') ? (
+                        <img 
+                          src={doc.url} 
+                          alt={doc.name} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="font-medium text-gray-900 text-sm truncate">{doc.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(doc.uploadedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <div className="p-6 text-center text-gray-500 text-sm">
+                No documents uploaded.
+              </div>
+            )}
+          </div>
+
+          {/* Account Status Card */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <h3 className="font-semibold text-gray-900 mb-3">Account Status</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">Role</span>
+                <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 capitalize">
+                  {user.role}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">Survey Status</span>
+                <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
+                  {user.surveyResponseId?.status || 'new'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">Created</span>
+                <span className="text-sm text-gray-900">
+                  {new Date(user.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions Card */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <h3 className="font-semibold text-gray-900 mb-3">Actions</h3>
+            <div className="space-y-2">
+              <button
+                onClick={handleResendCredentials}
+                disabled={resending}
+                className="w-full px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {resending ? "Sending..." : "Resend Login Credentials"}
+              </button>
+              <button
+                onClick={() => {
+                  if (confirm("Delete this user?")) {
+                    fetch(`/api/users/${params.id}`, { method: "DELETE" })
+                      .then(() => router.push("/dashboard/users"));
+                  }
+                }}
+                className="w-full px-4 py-2 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50"
+              >
+                Delete User
+              </button>
+            </div>
+          </div>
         </div>
-    </div>
+      </div>
 
       {/* Add Item Modal */}
       <AnimatePresence>
@@ -833,7 +939,7 @@ export default function PatientDetailPage() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Answer / Value
+                  Answer / Value <span className="text-gray-400 font-normal ml-1">(optional)</span>
                 </label>
                 <textarea
                   value={newItemAnswer}
@@ -862,6 +968,72 @@ export default function PatientDetailPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+        {/* Upload Modal */}
+        {showUploadModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-gray-900">Upload Document</h3>
+                <button onClick={() => setShowUploadModal(false)} className="text-gray-400 hover:text-gray-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <form onSubmit={handleUpload} className="p-6">
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Select File</label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer relative">
+                    <input 
+                      type="file" 
+                      onChange={handleFileChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      accept="image/*,application/pdf"
+                    />
+                    {selectedFile ? (
+                      <div className="text-sm text-gray-900 font-medium">
+                        {selectedFile.name}
+                        <p className="text-xs text-gray-500 mt-1">{(selectedFile.size / 1024).toFixed(0)} KB</p>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 mx-auto mb-2 text-gray-400">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                        </svg>
+                        <p>Click or drag to upload</p>
+                        <p className="text-xs mt-1">Images, PDF</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowUploadModal(false)}
+                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={uploading || !selectedFile}
+                    className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-70 flex items-center gap-2"
+                  >
+                    {uploading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Uploading...
+                      </>
+                    ) : "Upload"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
       {/* Note Modal */}
       <AnimatePresence>
