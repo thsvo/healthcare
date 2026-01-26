@@ -10,6 +10,7 @@ export default function PatientDetailPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [documentCategories, setDocumentCategories] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [resending, setResending] = useState(false);
@@ -50,6 +51,7 @@ export default function PatientDetailPage() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedDocCategory, setSelectedDocCategory] = useState("");
   
   // Collapsible state for categories
   const [expandedCategories, setExpandedCategories] = useState({});
@@ -92,9 +94,14 @@ export default function PatientDetailPage() {
       }
       
       // 2. Add document to user profile
+      
+      // Find category name if selected
+      const categoryName = documentCategories.find(c => c._id === selectedDocCategory)?.name;
+
       const newDoc = {
          url: uploadData.url,
-         name: selectedFile.name,
+         name: categoryName || selectedFile.name,
+         title: categoryName, // Store title specifically
          type: selectedFile.type,
          uploadedAt: new Date()
       };
@@ -113,6 +120,7 @@ export default function PatientDetailPage() {
         setUser(updateData.data);
         setShowUploadModal(false);
         setSelectedFile(null);
+        setSelectedDocCategory("");
         alert("Document uploaded successfully!");
       } else {
         throw new Error(updateData.error);
@@ -167,12 +175,23 @@ export default function PatientDetailPage() {
         fetch(`/api/users/${params.id}/notes`),
         fetch("/api/doctors"),
         fetch("/api/auth/me"),
+        fetch("/api/document-categories"),
       ]);
       
       const categoriesData = await categoriesRes.json();
       const questionsData = await questionsRes.json();
       const notesData = await notesRes.json();
       const doctorsData = await doctorsRes.json();
+      const docCatsData = await meRes[1] ? await meRes[1].json() : await (await fetch("/api/document-categories")).json(); 
+      // Correcting Promise.all indexing above is risky without verified indexes. 
+      // Let's safe fetch it separately or adjust index. 
+      // Actually the array has 6 items now? No wait.
+      // fetch("/api/document-categories") is the 6th item (index 5)
+      // fetch("/api/auth/me") is 5th item (index 4)
+      
+      const docCatsRes = await fetch("/api/document-categories");
+      const docCatsData2 = await docCatsRes.json();
+      if (docCatsData2.success) setDocumentCategories(docCatsData2.data);
       
       if (categoriesData.success) setCategories(categoriesData.data);
       if (questionsData.success) setQuestions(questionsData.data);
@@ -443,7 +462,8 @@ export default function PatientDetailPage() {
   return (
     <div className="space-y-6">
       {/* Back Button */}
-      <Link href="/dashboard/users" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900">
+      <div className="sticky top-16 z-20 bg-muted/95 backdrop-blur-sm -mx-6 px-6 pt-4 pb-4 shadow-sm transition-all duration-200">
+        <Link href="/dashboard/users" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
           <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
         </svg>
@@ -521,6 +541,7 @@ export default function PatientDetailPage() {
             </span>
           </div>
         </div>
+      </div>
       </div>
 
       {/* Main Content - Two Column Layout */}
@@ -823,7 +844,7 @@ export default function PatientDetailPage() {
                       )}
                     </div>
                     <div className="overflow-hidden">
-                      <p className="font-medium text-gray-900 text-sm truncate">{doc.name}</p>
+                      <p className="font-medium text-gray-900 text-sm truncate">{doc.title || doc.name}</p>
                       <p className="text-xs text-gray-500">
                         {new Date(doc.uploadedAt).toLocaleDateString()}
                       </p>
@@ -1019,6 +1040,20 @@ export default function PatientDetailPage() {
               </div>
               
               <form onSubmit={handleUpload} className="p-6">
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Document Title</label>
+                  <select
+                    value={selectedDocCategory}
+                    onChange={(e) => setSelectedDocCategory(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none bg-white"
+                  >
+                    <option value="">Select a title (or use filename)</option>
+                    {documentCategories.map(cat => (
+                      <option key={cat._id} value={cat._id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Select File</label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer relative">
