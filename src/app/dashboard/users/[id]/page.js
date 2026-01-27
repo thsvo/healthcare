@@ -464,7 +464,7 @@ export default function PatientDetailPage() {
   return (
     <div className="space-y-6">
       {/* Back Button */}
-      <div className="sticky top-16 z-20 bg-muted/95 backdrop-blur-sm -mx-6 px-6 pt-4 pb-4 shadow-sm transition-all duration-200">
+      <div className="sticky top-0 z-20 bg-muted/95 backdrop-blur-sm -mx-6 px-6 pt-4 pb-4 shadow-sm transition-all duration-200">
         <Link href="/dashboard/users" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
           <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
