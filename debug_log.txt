@@ -1,0 +1,1498 @@
+[2026-01-27T08:30:11.474Z] PUT SurveyResponse payload: {
+  "answers": [
+    {
+      "questionText": "test",
+      "answer": "test",
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionId": null,
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "addedAt": "2026-01-27T08:30:09.610Z"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "URI: R90.9",
+      "answer": "Always Use as Directed Take topiramate regularly as prescribed. Use sumatriptan only at the onset of a migraine and follow single-dose/timing limits on the label. Your clinician will decide dose and frequency to minimize risks.",
+      "addedAt": "2026-01-27T07:36:54.028Z",
+      "_id": "69786b163092f93b2fb4d72c"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "Hyperlipidimia: Z10",
+      "answer": "Topiramate can cause metabolic acidosis, kidney stones, cognitive symptoms, and other systemic effects, which your doctor monitors over time. 3. Always Use as Directed Take topiramate regularly as prescribed. Use sumatriptan only at the onset of a migraine and follow single-dose/timing limits on the label. Your clinician will decide dose and frequency to minimize risks.",
+      "addedAt": "2026-01-27T00:45:21.989Z",
+      "_id": "69780aa2b3f775c828e93e4f"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "Diabetes Type 2: E66.9",
+      "answer": "Underlying Health Conditions Matter Sumatriptan can affect blood vessels and is generally not recommended if you have certain heart or circulation issues like coronary artery disease, uncontrolled high blood pressure, or stroke risk factors. Topiramate can cause metabolic acidosis, kidney stones, cognitive symptoms, and other systemic effects, which your doctor monitors over time. 3. Always Use as Directed Take topiramate regularly as prescribed. Use sumatriptan only at the onset of a migraine and follow single-dose/timing limits on the label. Your clinician will decide dose and frequency to minimize risks.",
+      "addedAt": "2026-01-26T23:58:14.349Z",
+      "_id": "6977ff9667aacc114f428002"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "Hypertension I10",
+      "answer": "Important Considerations\n\nEven though there’s no direct interaction between the two drugs themselves, you should know:\n\n1. Individual Side Effects May Add Up\nEach medication has its own side effects (e.g., tingling, cognitive effects, fatigue from topiramate; chest pressure or dizziness from sumatriptan). Taking them together doesn’t cause an interaction but could make side effects more noticeable simply because you’re on more than one medication.\n\n2. Underlying Health Conditions Matter\n\nSumatriptan can affect blood vessels and is generally not recommended if you have certain heart or circulation issues like coronary artery disease, uncontrolled high blood pressure, or stroke risk factors.\n\nTopiramate can cause metabolic acidosis, kidney stones, cognitive symptoms, and other systemic effects, which your doctor monitors over time.\n\n3. Always Use as Directed\n\nTake topiramate regularly as prescribed.\n\nUse sumatriptan only at the onset of a migraine and follow single-dose/timing limits on the label.\nYour clinician will decide dose and frequency to minimize risks.",
+      "addedAt": "2026-01-25T22:10:41.601Z",
+      "_id": "697694e1d1e27af2771637a9"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "vbcvbc",
+      "answer": "",
+      "addedAt": "2026-01-25T17:17:05.518Z",
+      "_id": "6976501194214c0b331b0de6"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "testse",
+      "answer": "tsetset",
+      "addedAt": "2026-01-25T16:59:36.293Z",
+      "_id": "69764bf894214c0b331b0db9"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "6975321634cb8e06bf81e552",
+      "questionText": "Alcohol",
+      "answer": "Drinks 2 drink per day",
+      "addedAt": "2026-01-24T20:57:41.892Z",
+      "_id": "6975324680113292c74a7915"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "6975321634cb8e06bf81e552",
+      "questionText": "Smoking/Tobacco ",
+      "answer": "Never Smoked",
+      "addedAt": "2026-01-24T20:58:24.239Z",
+      "_id": "6975327080113292c74a791b"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "6975321634cb8e06bf81e552",
+      "questionText": "Substance use",
+      "answer": "Denies",
+      "addedAt": "2026-01-24T20:58:48.824Z",
+      "_id": "6975328880113292c74a7923"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Metformin 500mg",
+      "answer": "1 tablet daily",
+      "addedAt": "2026-01-24T21:02:52.684Z",
+      "_id": "6975337cbe176d1f7e2e67fc"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Mobic",
+      "answer": "1 tablet as needed",
+      "addedAt": "2026-01-24T21:03:06.978Z",
+      "_id": "6975338bbe176d1f7e2e6808"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531c834cb8e06bf81e54c",
+      "questionText": "Hypertention ",
+      "answer": "-",
+      "addedAt": "2026-01-24T21:03:46.076Z",
+      "_id": "697533b2be176d1f7e2e6816"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531c834cb8e06bf81e54c",
+      "questionText": "Hyperlipidemia",
+      "answer": "-",
+      "addedAt": "2026-01-24T21:04:35.072Z",
+      "_id": "697533e3be176d1f7e2e6826"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531c834cb8e06bf81e54c",
+      "questionText": "Obesity",
+      "answer": "-",
+      "addedAt": "2026-01-24T21:04:53.847Z",
+      "_id": "697533f6be176d1f7e2e6838"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "69710e69804730066f63c09e",
+      "questionText": "Penicillin",
+      "answer": "Rash",
+      "addedAt": "2026-01-24T21:05:16.910Z",
+      "_id": "6975340e35a80b6f198dfd1a"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "69710e69804730066f63c09e",
+      "questionText": "Zithromax",
+      "answer": "Hives",
+      "addedAt": "2026-01-24T21:05:33.283Z",
+      "_id": "6975341d35a80b6f198dfd45"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531de34cb8e06bf81e54f",
+      "questionText": "Hysterectomy",
+      "answer": "2025",
+      "addedAt": "2026-01-24T21:07:00.995Z",
+      "_id": "6975347535a80b6f198dfd71"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531de34cb8e06bf81e54f",
+      "questionText": "C-section x 3",
+      "answer": "1999, 2005, 2015",
+      "addedAt": "2026-01-24T21:08:39.868Z",
+      "_id": "697534d835a80b6f198dfda3"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "tylenol 500mg",
+      "answer": "1 tablet daily",
+      "addedAt": "2026-01-24T21:24:23.653Z",
+      "_id": "6975388720641fb0d37bd52e"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Tirzepatide (2.5mg, 5mg, 7.5mg)",
+      "answer": "as",
+      "addedAt": "2026-01-24T21:27:51.865Z",
+      "_id": "69753958203ac2c51b9ea9e6"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Tirzepatide 7.5mg",
+      "answer": "sdfas",
+      "addedAt": "2026-01-24T21:28:04.553Z",
+      "_id": "69753964203ac2c51b9eaa05"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Tirzepatide 7.5mg",
+      "answer": "sfss",
+      "addedAt": "2026-01-24T21:28:16.735Z",
+      "_id": "69753970203ac2c51b9eaa25"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "Obesity E66.9",
+      "answer": "Weight loss treatment ",
+      "addedAt": "2026-01-24T22:29:37.575Z",
+      "_id": "697547d1ef452672b6d33e9c"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "headache",
+      "answer": "gbnsbnnd",
+      "addedAt": "2026-01-25T02:18:18.727Z",
+      "_id": "69757d6a8b3a6f71e6a1e338"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Semaglutide",
+      "answer": "1mg 12 weeksm,,,",
+      "addedAt": "2026-01-25T02:40:37.244Z",
+      "_id": "697582a5b0fa055618d96aeb"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "69710e69804730066f63c09e",
+      "questionText": "sfbhsfb",
+      "answer": "sbfsf",
+      "addedAt": "2026-01-25T02:43:54.331Z",
+      "_id": "6975836ab0fa055618d96b13"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "tests",
+      "answer": "etsets",
+      "addedAt": "2026-01-25T16:57:17.369Z",
+      "_id": "69764b6e94214c0b331b0da2"
+    }
+  ]
+}
+[2026-01-27T08:30:11.475Z] Update Data prepared: {
+  "answers": [
+    {
+      "questionText": "test",
+      "answer": "test",
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionId": null,
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "addedAt": "2026-01-27T08:30:09.610Z"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "URI: R90.9",
+      "answer": "Always Use as Directed Take topiramate regularly as prescribed. Use sumatriptan only at the onset of a migraine and follow single-dose/timing limits on the label. Your clinician will decide dose and frequency to minimize risks.",
+      "addedAt": "2026-01-27T07:36:54.028Z",
+      "_id": "69786b163092f93b2fb4d72c"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "Hyperlipidimia: Z10",
+      "answer": "Topiramate can cause metabolic acidosis, kidney stones, cognitive symptoms, and other systemic effects, which your doctor monitors over time. 3. Always Use as Directed Take topiramate regularly as prescribed. Use sumatriptan only at the onset of a migraine and follow single-dose/timing limits on the label. Your clinician will decide dose and frequency to minimize risks.",
+      "addedAt": "2026-01-27T00:45:21.989Z",
+      "_id": "69780aa2b3f775c828e93e4f"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "Diabetes Type 2: E66.9",
+      "answer": "Underlying Health Conditions Matter Sumatriptan can affect blood vessels and is generally not recommended if you have certain heart or circulation issues like coronary artery disease, uncontrolled high blood pressure, or stroke risk factors. Topiramate can cause metabolic acidosis, kidney stones, cognitive symptoms, and other systemic effects, which your doctor monitors over time. 3. Always Use as Directed Take topiramate regularly as prescribed. Use sumatriptan only at the onset of a migraine and follow single-dose/timing limits on the label. Your clinician will decide dose and frequency to minimize risks.",
+      "addedAt": "2026-01-26T23:58:14.349Z",
+      "_id": "6977ff9667aacc114f428002"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "Hypertension I10",
+      "answer": "Important Considerations\n\nEven though there’s no direct interaction between the two drugs themselves, you should know:\n\n1. Individual Side Effects May Add Up\nEach medication has its own side effects (e.g., tingling, cognitive effects, fatigue from topiramate; chest pressure or dizziness from sumatriptan). Taking them together doesn’t cause an interaction but could make side effects more noticeable simply because you’re on more than one medication.\n\n2. Underlying Health Conditions Matter\n\nSumatriptan can affect blood vessels and is generally not recommended if you have certain heart or circulation issues like coronary artery disease, uncontrolled high blood pressure, or stroke risk factors.\n\nTopiramate can cause metabolic acidosis, kidney stones, cognitive symptoms, and other systemic effects, which your doctor monitors over time.\n\n3. Always Use as Directed\n\nTake topiramate regularly as prescribed.\n\nUse sumatriptan only at the onset of a migraine and follow single-dose/timing limits on the label.\nYour clinician will decide dose and frequency to minimize risks.",
+      "addedAt": "2026-01-25T22:10:41.601Z",
+      "_id": "697694e1d1e27af2771637a9"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "vbcvbc",
+      "answer": "",
+      "addedAt": "2026-01-25T17:17:05.518Z",
+      "_id": "6976501194214c0b331b0de6"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "testse",
+      "answer": "tsetset",
+      "addedAt": "2026-01-25T16:59:36.293Z",
+      "_id": "69764bf894214c0b331b0db9"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "6975321634cb8e06bf81e552",
+      "questionText": "Alcohol",
+      "answer": "Drinks 2 drink per day",
+      "addedAt": "2026-01-24T20:57:41.892Z",
+      "_id": "6975324680113292c74a7915"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "6975321634cb8e06bf81e552",
+      "questionText": "Smoking/Tobacco ",
+      "answer": "Never Smoked",
+      "addedAt": "2026-01-24T20:58:24.239Z",
+      "_id": "6975327080113292c74a791b"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "6975321634cb8e06bf81e552",
+      "questionText": "Substance use",
+      "answer": "Denies",
+      "addedAt": "2026-01-24T20:58:48.824Z",
+      "_id": "6975328880113292c74a7923"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Metformin 500mg",
+      "answer": "1 tablet daily",
+      "addedAt": "2026-01-24T21:02:52.684Z",
+      "_id": "6975337cbe176d1f7e2e67fc"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Mobic",
+      "answer": "1 tablet as needed",
+      "addedAt": "2026-01-24T21:03:06.978Z",
+      "_id": "6975338bbe176d1f7e2e6808"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531c834cb8e06bf81e54c",
+      "questionText": "Hypertention ",
+      "answer": "-",
+      "addedAt": "2026-01-24T21:03:46.076Z",
+      "_id": "697533b2be176d1f7e2e6816"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531c834cb8e06bf81e54c",
+      "questionText": "Hyperlipidemia",
+      "answer": "-",
+      "addedAt": "2026-01-24T21:04:35.072Z",
+      "_id": "697533e3be176d1f7e2e6826"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531c834cb8e06bf81e54c",
+      "questionText": "Obesity",
+      "answer": "-",
+      "addedAt": "2026-01-24T21:04:53.847Z",
+      "_id": "697533f6be176d1f7e2e6838"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "69710e69804730066f63c09e",
+      "questionText": "Penicillin",
+      "answer": "Rash",
+      "addedAt": "2026-01-24T21:05:16.910Z",
+      "_id": "6975340e35a80b6f198dfd1a"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "69710e69804730066f63c09e",
+      "questionText": "Zithromax",
+      "answer": "Hives",
+      "addedAt": "2026-01-24T21:05:33.283Z",
+      "_id": "6975341d35a80b6f198dfd45"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531de34cb8e06bf81e54f",
+      "questionText": "Hysterectomy",
+      "answer": "2025",
+      "addedAt": "2026-01-24T21:07:00.995Z",
+      "_id": "6975347535a80b6f198dfd71"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531de34cb8e06bf81e54f",
+      "questionText": "C-section x 3",
+      "answer": "1999, 2005, 2015",
+      "addedAt": "2026-01-24T21:08:39.868Z",
+      "_id": "697534d835a80b6f198dfda3"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "tylenol 500mg",
+      "answer": "1 tablet daily",
+      "addedAt": "2026-01-24T21:24:23.653Z",
+      "_id": "6975388720641fb0d37bd52e"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Tirzepatide (2.5mg, 5mg, 7.5mg)",
+      "answer": "as",
+      "addedAt": "2026-01-24T21:27:51.865Z",
+      "_id": "69753958203ac2c51b9ea9e6"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Tirzepatide 7.5mg",
+      "answer": "sdfas",
+      "addedAt": "2026-01-24T21:28:04.553Z",
+      "_id": "69753964203ac2c51b9eaa05"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Tirzepatide 7.5mg",
+      "answer": "sfss",
+      "addedAt": "2026-01-24T21:28:16.735Z",
+      "_id": "69753970203ac2c51b9eaa25"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "Obesity E66.9",
+      "answer": "Weight loss treatment ",
+      "addedAt": "2026-01-24T22:29:37.575Z",
+      "_id": "697547d1ef452672b6d33e9c"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "headache",
+      "answer": "gbnsbnnd",
+      "addedAt": "2026-01-25T02:18:18.727Z",
+      "_id": "69757d6a8b3a6f71e6a1e338"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Semaglutide",
+      "answer": "1mg 12 weeksm,,,",
+      "addedAt": "2026-01-25T02:40:37.244Z",
+      "_id": "697582a5b0fa055618d96aeb"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "69710e69804730066f63c09e",
+      "questionText": "sfbhsfb",
+      "answer": "sbfsf",
+      "addedAt": "2026-01-25T02:43:54.331Z",
+      "_id": "6975836ab0fa055618d96b13"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "tests",
+      "answer": "etsets",
+      "addedAt": "2026-01-25T16:57:17.369Z",
+      "_id": "69764b6e94214c0b331b0da2"
+    }
+  ]
+}
+[2026-01-27T08:30:12.039Z] Updated SurveyResponse: Success
+[2026-01-27T08:30:12.043Z] Updated answers count: 28
+[2026-01-27T08:30:26.435Z] PUT SurveyResponse payload: {
+  "answers": [
+    {
+      "questionText": "tets",
+      "answer": "test",
+      "categoryId": "69710e69804730066f63c09e",
+      "questionId": null,
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "addedAt": "2026-01-27T08:30:26.337Z"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "test",
+      "answer": "test",
+      "addedAt": "2026-01-27T08:30:09.610Z",
+      "_id": "697877939957762aa8c03138"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "URI: R90.9",
+      "answer": "Always Use as Directed Take topiramate regularly as prescribed. Use sumatriptan only at the onset of a migraine and follow single-dose/timing limits on the label. Your clinician will decide dose and frequency to minimize risks.",
+      "addedAt": "2026-01-27T07:36:54.028Z",
+      "_id": "69786b163092f93b2fb4d72c"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "Hyperlipidimia: Z10",
+      "answer": "Topiramate can cause metabolic acidosis, kidney stones, cognitive symptoms, and other systemic effects, which your doctor monitors over time. 3. Always Use as Directed Take topiramate regularly as prescribed. Use sumatriptan only at the onset of a migraine and follow single-dose/timing limits on the label. Your clinician will decide dose and frequency to minimize risks.",
+      "addedAt": "2026-01-27T00:45:21.989Z",
+      "_id": "69780aa2b3f775c828e93e4f"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "Diabetes Type 2: E66.9",
+      "answer": "Underlying Health Conditions Matter Sumatriptan can affect blood vessels and is generally not recommended if you have certain heart or circulation issues like coronary artery disease, uncontrolled high blood pressure, or stroke risk factors. Topiramate can cause metabolic acidosis, kidney stones, cognitive symptoms, and other systemic effects, which your doctor monitors over time. 3. Always Use as Directed Take topiramate regularly as prescribed. Use sumatriptan only at the onset of a migraine and follow single-dose/timing limits on the label. Your clinician will decide dose and frequency to minimize risks.",
+      "addedAt": "2026-01-26T23:58:14.349Z",
+      "_id": "6977ff9667aacc114f428002"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "Hypertension I10",
+      "answer": "Important Considerations\n\nEven though there’s no direct interaction between the two drugs themselves, you should know:\n\n1. Individual Side Effects May Add Up\nEach medication has its own side effects (e.g., tingling, cognitive effects, fatigue from topiramate; chest pressure or dizziness from sumatriptan). Taking them together doesn’t cause an interaction but could make side effects more noticeable simply because you’re on more than one medication.\n\n2. Underlying Health Conditions Matter\n\nSumatriptan can affect blood vessels and is generally not recommended if you have certain heart or circulation issues like coronary artery disease, uncontrolled high blood pressure, or stroke risk factors.\n\nTopiramate can cause metabolic acidosis, kidney stones, cognitive symptoms, and other systemic effects, which your doctor monitors over time.\n\n3. Always Use as Directed\n\nTake topiramate regularly as prescribed.\n\nUse sumatriptan only at the onset of a migraine and follow single-dose/timing limits on the label.\nYour clinician will decide dose and frequency to minimize risks.",
+      "addedAt": "2026-01-25T22:10:41.601Z",
+      "_id": "697694e1d1e27af2771637a9"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "vbcvbc",
+      "answer": "",
+      "addedAt": "2026-01-25T17:17:05.518Z",
+      "_id": "6976501194214c0b331b0de6"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "testse",
+      "answer": "tsetset",
+      "addedAt": "2026-01-25T16:59:36.293Z",
+      "_id": "69764bf894214c0b331b0db9"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "6975321634cb8e06bf81e552",
+      "questionText": "Alcohol",
+      "answer": "Drinks 2 drink per day",
+      "addedAt": "2026-01-24T20:57:41.892Z",
+      "_id": "6975324680113292c74a7915"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "6975321634cb8e06bf81e552",
+      "questionText": "Smoking/Tobacco ",
+      "answer": "Never Smoked",
+      "addedAt": "2026-01-24T20:58:24.239Z",
+      "_id": "6975327080113292c74a791b"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "6975321634cb8e06bf81e552",
+      "questionText": "Substance use",
+      "answer": "Denies",
+      "addedAt": "2026-01-24T20:58:48.824Z",
+      "_id": "6975328880113292c74a7923"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Metformin 500mg",
+      "answer": "1 tablet daily",
+      "addedAt": "2026-01-24T21:02:52.684Z",
+      "_id": "6975337cbe176d1f7e2e67fc"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Mobic",
+      "answer": "1 tablet as needed",
+      "addedAt": "2026-01-24T21:03:06.978Z",
+      "_id": "6975338bbe176d1f7e2e6808"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531c834cb8e06bf81e54c",
+      "questionText": "Hypertention ",
+      "answer": "-",
+      "addedAt": "2026-01-24T21:03:46.076Z",
+      "_id": "697533b2be176d1f7e2e6816"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531c834cb8e06bf81e54c",
+      "questionText": "Hyperlipidemia",
+      "answer": "-",
+      "addedAt": "2026-01-24T21:04:35.072Z",
+      "_id": "697533e3be176d1f7e2e6826"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531c834cb8e06bf81e54c",
+      "questionText": "Obesity",
+      "answer": "-",
+      "addedAt": "2026-01-24T21:04:53.847Z",
+      "_id": "697533f6be176d1f7e2e6838"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "69710e69804730066f63c09e",
+      "questionText": "Penicillin",
+      "answer": "Rash",
+      "addedAt": "2026-01-24T21:05:16.910Z",
+      "_id": "6975340e35a80b6f198dfd1a"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "69710e69804730066f63c09e",
+      "questionText": "Zithromax",
+      "answer": "Hives",
+      "addedAt": "2026-01-24T21:05:33.283Z",
+      "_id": "6975341d35a80b6f198dfd45"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531de34cb8e06bf81e54f",
+      "questionText": "Hysterectomy",
+      "answer": "2025",
+      "addedAt": "2026-01-24T21:07:00.995Z",
+      "_id": "6975347535a80b6f198dfd71"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531de34cb8e06bf81e54f",
+      "questionText": "C-section x 3",
+      "answer": "1999, 2005, 2015",
+      "addedAt": "2026-01-24T21:08:39.868Z",
+      "_id": "697534d835a80b6f198dfda3"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "tylenol 500mg",
+      "answer": "1 tablet daily",
+      "addedAt": "2026-01-24T21:24:23.653Z",
+      "_id": "6975388720641fb0d37bd52e"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Tirzepatide (2.5mg, 5mg, 7.5mg)",
+      "answer": "as",
+      "addedAt": "2026-01-24T21:27:51.865Z",
+      "_id": "69753958203ac2c51b9ea9e6"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Tirzepatide 7.5mg",
+      "answer": "sdfas",
+      "addedAt": "2026-01-24T21:28:04.553Z",
+      "_id": "69753964203ac2c51b9eaa05"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Tirzepatide 7.5mg",
+      "answer": "sfss",
+      "addedAt": "2026-01-24T21:28:16.735Z",
+      "_id": "69753970203ac2c51b9eaa25"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "Obesity E66.9",
+      "answer": "Weight loss treatment ",
+      "addedAt": "2026-01-24T22:29:37.575Z",
+      "_id": "697547d1ef452672b6d33e9c"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "headache",
+      "answer": "gbnsbnnd",
+      "addedAt": "2026-01-25T02:18:18.727Z",
+      "_id": "69757d6a8b3a6f71e6a1e338"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Semaglutide",
+      "answer": "1mg 12 weeksm,,,",
+      "addedAt": "2026-01-25T02:40:37.244Z",
+      "_id": "697582a5b0fa055618d96aeb"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "69710e69804730066f63c09e",
+      "questionText": "sfbhsfb",
+      "answer": "sbfsf",
+      "addedAt": "2026-01-25T02:43:54.331Z",
+      "_id": "6975836ab0fa055618d96b13"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "tests",
+      "answer": "etsets",
+      "addedAt": "2026-01-25T16:57:17.369Z",
+      "_id": "69764b6e94214c0b331b0da2"
+    }
+  ]
+}
+[2026-01-27T08:30:26.436Z] Update Data prepared: {
+  "answers": [
+    {
+      "questionText": "tets",
+      "answer": "test",
+      "categoryId": "69710e69804730066f63c09e",
+      "questionId": null,
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "addedAt": "2026-01-27T08:30:26.337Z"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "test",
+      "answer": "test",
+      "addedAt": "2026-01-27T08:30:09.610Z",
+      "_id": "697877939957762aa8c03138"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "URI: R90.9",
+      "answer": "Always Use as Directed Take topiramate regularly as prescribed. Use sumatriptan only at the onset of a migraine and follow single-dose/timing limits on the label. Your clinician will decide dose and frequency to minimize risks.",
+      "addedAt": "2026-01-27T07:36:54.028Z",
+      "_id": "69786b163092f93b2fb4d72c"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "Hyperlipidimia: Z10",
+      "answer": "Topiramate can cause metabolic acidosis, kidney stones, cognitive symptoms, and other systemic effects, which your doctor monitors over time. 3. Always Use as Directed Take topiramate regularly as prescribed. Use sumatriptan only at the onset of a migraine and follow single-dose/timing limits on the label. Your clinician will decide dose and frequency to minimize risks.",
+      "addedAt": "2026-01-27T00:45:21.989Z",
+      "_id": "69780aa2b3f775c828e93e4f"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "Diabetes Type 2: E66.9",
+      "answer": "Underlying Health Conditions Matter Sumatriptan can affect blood vessels and is generally not recommended if you have certain heart or circulation issues like coronary artery disease, uncontrolled high blood pressure, or stroke risk factors. Topiramate can cause metabolic acidosis, kidney stones, cognitive symptoms, and other systemic effects, which your doctor monitors over time. 3. Always Use as Directed Take topiramate regularly as prescribed. Use sumatriptan only at the onset of a migraine and follow single-dose/timing limits on the label. Your clinician will decide dose and frequency to minimize risks.",
+      "addedAt": "2026-01-26T23:58:14.349Z",
+      "_id": "6977ff9667aacc114f428002"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "Hypertension I10",
+      "answer": "Important Considerations\n\nEven though there’s no direct interaction between the two drugs themselves, you should know:\n\n1. Individual Side Effects May Add Up\nEach medication has its own side effects (e.g., tingling, cognitive effects, fatigue from topiramate; chest pressure or dizziness from sumatriptan). Taking them together doesn’t cause an interaction but could make side effects more noticeable simply because you’re on more than one medication.\n\n2. Underlying Health Conditions Matter\n\nSumatriptan can affect blood vessels and is generally not recommended if you have certain heart or circulation issues like coronary artery disease, uncontrolled high blood pressure, or stroke risk factors.\n\nTopiramate can cause metabolic acidosis, kidney stones, cognitive symptoms, and other systemic effects, which your doctor monitors over time.\n\n3. Always Use as Directed\n\nTake topiramate regularly as prescribed.\n\nUse sumatriptan only at the onset of a migraine and follow single-dose/timing limits on the label.\nYour clinician will decide dose and frequency to minimize risks.",
+      "addedAt": "2026-01-25T22:10:41.601Z",
+      "_id": "697694e1d1e27af2771637a9"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "vbcvbc",
+      "answer": "",
+      "addedAt": "2026-01-25T17:17:05.518Z",
+      "_id": "6976501194214c0b331b0de6"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "testse",
+      "answer": "tsetset",
+      "addedAt": "2026-01-25T16:59:36.293Z",
+      "_id": "69764bf894214c0b331b0db9"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "6975321634cb8e06bf81e552",
+      "questionText": "Alcohol",
+      "answer": "Drinks 2 drink per day",
+      "addedAt": "2026-01-24T20:57:41.892Z",
+      "_id": "6975324680113292c74a7915"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "6975321634cb8e06bf81e552",
+      "questionText": "Smoking/Tobacco ",
+      "answer": "Never Smoked",
+      "addedAt": "2026-01-24T20:58:24.239Z",
+      "_id": "6975327080113292c74a791b"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "6975321634cb8e06bf81e552",
+      "questionText": "Substance use",
+      "answer": "Denies",
+      "addedAt": "2026-01-24T20:58:48.824Z",
+      "_id": "6975328880113292c74a7923"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Metformin 500mg",
+      "answer": "1 tablet daily",
+      "addedAt": "2026-01-24T21:02:52.684Z",
+      "_id": "6975337cbe176d1f7e2e67fc"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Mobic",
+      "answer": "1 tablet as needed",
+      "addedAt": "2026-01-24T21:03:06.978Z",
+      "_id": "6975338bbe176d1f7e2e6808"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531c834cb8e06bf81e54c",
+      "questionText": "Hypertention ",
+      "answer": "-",
+      "addedAt": "2026-01-24T21:03:46.076Z",
+      "_id": "697533b2be176d1f7e2e6816"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531c834cb8e06bf81e54c",
+      "questionText": "Hyperlipidemia",
+      "answer": "-",
+      "addedAt": "2026-01-24T21:04:35.072Z",
+      "_id": "697533e3be176d1f7e2e6826"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531c834cb8e06bf81e54c",
+      "questionText": "Obesity",
+      "answer": "-",
+      "addedAt": "2026-01-24T21:04:53.847Z",
+      "_id": "697533f6be176d1f7e2e6838"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "69710e69804730066f63c09e",
+      "questionText": "Penicillin",
+      "answer": "Rash",
+      "addedAt": "2026-01-24T21:05:16.910Z",
+      "_id": "6975340e35a80b6f198dfd1a"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "69710e69804730066f63c09e",
+      "questionText": "Zithromax",
+      "answer": "Hives",
+      "addedAt": "2026-01-24T21:05:33.283Z",
+      "_id": "6975341d35a80b6f198dfd45"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531de34cb8e06bf81e54f",
+      "questionText": "Hysterectomy",
+      "answer": "2025",
+      "addedAt": "2026-01-24T21:07:00.995Z",
+      "_id": "6975347535a80b6f198dfd71"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697531de34cb8e06bf81e54f",
+      "questionText": "C-section x 3",
+      "answer": "1999, 2005, 2015",
+      "addedAt": "2026-01-24T21:08:39.868Z",
+      "_id": "697534d835a80b6f198dfda3"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "tylenol 500mg",
+      "answer": "1 tablet daily",
+      "addedAt": "2026-01-24T21:24:23.653Z",
+      "_id": "6975388720641fb0d37bd52e"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Tirzepatide (2.5mg, 5mg, 7.5mg)",
+      "answer": "as",
+      "addedAt": "2026-01-24T21:27:51.865Z",
+      "_id": "69753958203ac2c51b9ea9e6"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Tirzepatide 7.5mg",
+      "answer": "sdfas",
+      "addedAt": "2026-01-24T21:28:04.553Z",
+      "_id": "69753964203ac2c51b9eaa05"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Tirzepatide 7.5mg",
+      "answer": "sfss",
+      "addedAt": "2026-01-24T21:28:16.735Z",
+      "_id": "69753970203ac2c51b9eaa25"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "Obesity E66.9",
+      "answer": "Weight loss treatment ",
+      "addedAt": "2026-01-24T22:29:37.575Z",
+      "_id": "697547d1ef452672b6d33e9c"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "headache",
+      "answer": "gbnsbnnd",
+      "addedAt": "2026-01-25T02:18:18.727Z",
+      "_id": "69757d6a8b3a6f71e6a1e338"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "697069dfee939c5b2b75e6af",
+      "questionText": "Semaglutide",
+      "answer": "1mg 12 weeksm,,,",
+      "addedAt": "2026-01-25T02:40:37.244Z",
+      "_id": "697582a5b0fa055618d96aeb"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "69710e69804730066f63c09e",
+      "questionText": "sfbhsfb",
+      "answer": "sbfsf",
+      "addedAt": "2026-01-25T02:43:54.331Z",
+      "_id": "6975836ab0fa055618d96b13"
+    },
+    {
+      "addedBy": {
+        "name": "Tariqul Islam",
+        "role": "admin",
+        "id": "696f590253b3ecff43faaaf6"
+      },
+      "questionId": null,
+      "categoryId": "696f893b470d9fb3429a122e",
+      "questionText": "tests",
+      "answer": "etsets",
+      "addedAt": "2026-01-25T16:57:17.369Z",
+      "_id": "69764b6e94214c0b331b0da2"
+    }
+  ]
+}
+[2026-01-27T08:30:26.983Z] Updated SurveyResponse: Success
+[2026-01-27T08:30:26.984Z] Updated answers count: 29

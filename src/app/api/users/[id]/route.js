@@ -45,9 +45,6 @@ export async function GET(request, { params }) {
       user.surveyResponseId = surveyResponse._id;
       await user.save();
       
-      user.surveyResponseId = surveyResponse._id;
-      await user.save();
-      
       // Re-fetch populated user
       user = await User.findById(id)
         .select('-password')
