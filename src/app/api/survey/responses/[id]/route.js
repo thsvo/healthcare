@@ -1,14 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import SurveyResponse from "@/models/SurveyResponse";
-import fs from 'fs';
-import path from 'path';
 
-function logToFile(message) {
-  const logPath = path.join(process.cwd(), 'debug_log.txt');
-  const timestamp = new Date().toISOString();
-  fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`);
-}
 
 
 // GET single response
@@ -42,9 +35,6 @@ export async function PUT(request, { params }) {
     if (body.followUp !== undefined) updateData.followUp = body.followUp;
     if (body.refillReminder !== undefined) updateData.refillReminder = body.refillReminder;
     if (body.providerNote !== undefined) updateData.providerNote = body.providerNote;
-
-    logToFile("PUT SurveyResponse payload: " + JSON.stringify(body, null, 2));
-    logToFile("Update Data prepared: " + JSON.stringify(updateData, null, 2));
 
 
     // Handle new chat message
@@ -83,10 +73,6 @@ export async function PUT(request, { params }) {
       { new: true }
     ).populate({ path: 'assignedDoctor', select: 'firstName lastName email', strictPopulate: false });
     
-    logToFile("Updated SurveyResponse: " + (response ? "Success" : "Not Found"));
-    if (response && updateData.answers) {
-        logToFile("Updated answers count: " + response.answers.length);
-    }
     
     if (!response) {
       return NextResponse.json({ success: false, error: "Response not found" }, { status: 404 });

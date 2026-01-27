@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import RichTextEditor from "@/components/Editor/RichTextEditor";
+
 
 export default function PatientDetailPage() {
   const params = useParams();
@@ -586,15 +588,28 @@ export default function PatientDetailPage() {
                   </span>
                   <button 
                     onClick={() => toggleCategory(categoryId)}
-                    className="text-xs text-teal-600 hover:text-teal-700 font-medium ml-2 hover:underline"
+                    className="text-teal-600 hover:text-teal-700 transition-colors p-1"
+                    title={expandedCategories[categoryId] ? 'Collapse' : 'Expand'}
                   >
-                    {expandedCategories[categoryId] ? 'Collapse' : 'Expand'}
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      strokeWidth={2.5} 
+                      stroke="currentColor" 
+                      className={`w-4 h-4 transition-transform duration-200 ${expandedCategories[categoryId] ? 'rotate-180' : ''}`}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
                   </button>
                   <button
                     onClick={() => openAddModal(categoryId)}
-                    className="text-primary hover:text-primary/80 text-sm font-medium ml-2 flex items-center gap-1"
+                    className="text-primary hover:text-primary/80 transition-colors p-1"
+                    title="Add Item"
                   >
-                    + Add
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
                   </button>
                 </div>
               </div>
@@ -606,11 +621,10 @@ export default function PatientDetailPage() {
                   <div key={idx} className="p-4 flex justify-between group">
                     <div>
                       <p className="text-sm text-gray-500 mb-1">{answer.questionText}</p>
-                      <p className="text-gray-900 font-medium">
-                        {Array.isArray(answer.answer) 
-                          ? answer.answer.join(', ') 
-                          : answer.answer || <span className="text-gray-400 italic">No answer</span>}
-                      </p>
+                      <div 
+                        className="quill-content"
+                        dangerouslySetInnerHTML={{ __html: Array.isArray(answer.answer) ? answer.answer.join(', ') : (answer.answer || '<span class="text-gray-400 italic">No answer</span>') }}
+                      />
                     </div>
                     
                     <div className="flex items-center gap-4">
@@ -735,7 +749,10 @@ export default function PatientDetailPage() {
                       {(submission.providerNote || submission.followUp || submission.refillReminder) && (
                         <div className="mt-2 pt-2 border-t border-gray-100 text-xs">
                           {submission.providerNote && (
-                            <p className="text-gray-700 italic mb-1">"{submission.providerNote}"</p>
+                            <div 
+                              className="quill-content !text-xs italic mb-1"
+                              dangerouslySetInnerHTML={{ __html: submission.providerNote }}
+                            />
                           )}
                           <div className="flex gap-3 text-gray-500">
                             {submission.followUp && (
@@ -775,7 +792,10 @@ export default function PatientDetailPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-teal-700 font-medium">{note.type}</p>
-                        <p className="text-sm text-gray-900 mt-0.5 truncate">{note.content}</p>
+                        <div 
+                          className="quill-content !text-sm mt-0.5 truncate"
+                          dangerouslySetInnerHTML={{ __html: note.content }}
+                        />
                         <p className="text-xs text-gray-500 mt-1">
                           {new Date(note.createdAt).toLocaleDateString()} • {note.createdBy?.firstName || 'Admin'}
                         </p>
@@ -998,13 +1018,14 @@ export default function PatientDetailPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Answer / Value <span className="text-gray-400 font-normal ml-1">(optional)</span>
                 </label>
-                <textarea
-                  value={newItemAnswer}
-                  onChange={(e) => setNewItemAnswer(e.target.value)}
-                  placeholder="e.g., O Positive"
-                  rows={3}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all resize-none"
-                />
+                <div className="border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all">
+                  <RichTextEditor
+                    value={newItemAnswer}
+                    onChange={setNewItemAnswer}
+                    placeholder="e.g., O Positive (Type / for templates)"
+                    height="150px"
+                  />
+                </div>
               </div>
               
               <div className="flex gap-3 mt-6">
@@ -1161,13 +1182,14 @@ export default function PatientDetailPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Note Content
               </label>
-              <textarea
-                value={noteContent}
-                onChange={(e) => setNoteContent(e.target.value)}
-                placeholder="Enter your note here..."
-                rows={5}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all resize-none"
-              />
+              <div className="border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-teal-500 transition-all">
+                <RichTextEditor
+                  value={noteContent}
+                  onChange={setNoteContent}
+                  placeholder="Type / to use templates..."
+                  className="p-4"
+                />
+              </div>
               
               <div className="flex gap-3 mt-4">
                 <button
@@ -1256,8 +1278,7 @@ export default function PatientDetailPage() {
               
               <div>
                 <p className="text-xs text-gray-500 mb-1">Note Content</p>
-                <div className="bg-gray-50 rounded-lg p-4 text-gray-900 text-sm whitespace-pre-wrap">
-                  {viewingNote.content}
+                <div className="bg-gray-50 rounded-lg p-4 text-gray-900 text-sm quill-content" dangerouslySetInnerHTML={{ __html: viewingNote.content }}>
                 </div>
               </div>
               
@@ -1380,12 +1401,10 @@ export default function PatientDetailPage() {
                         <span className="text-purple-600 mr-2">Q{index + 1}.</span>
                         {qa.questionText}
                       </p>
-                      <p className="text-gray-600">
-                        {Array.isArray(qa.answer) 
-                          ? qa.answer.join(", ") 
-                          : qa.answer || <span className="text-gray-400 italic">No answer</span>
-                        }
-                      </p>
+                      <div 
+                        className="quill-content !text-gray-600"
+                        dangerouslySetInnerHTML={{ __html: Array.isArray(qa.answer) ? qa.answer.join(", ") : (qa.answer || '<span class="text-gray-400 italic">No answer</span>') }}
+                      />
                     </div>
                   ))
                 ) : (
@@ -1407,13 +1426,17 @@ export default function PatientDetailPage() {
                          {viewingSubmission.providerNote && !viewingSubmission.messages?.length && (
                             <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-3 text-sm">
                                 <span className="text-yellow-700 font-semibold text-xs uppercase block mb-1">Legacy Note</span>
-                                <p className="text-gray-800">{viewingSubmission.providerNote}</p>
+                                    <div 
+                                        className="quill-content"
+                                        dangerouslySetInnerHTML={{ __html: viewingSubmission.providerNote }}
+                                    />
                             </div>
                          )}
 
                         {/* Chat Messages */}
                         {viewingSubmission.messages?.map((msg, idx) => {
-                             const isMe = msg.senderId === user._id; // Or check role if simple
+                             const isMe = msg.senderId === currentUser?._id; 
+
                              const isSystem = msg.senderRole === 'system';
                              return (
                                  <div key={idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
@@ -1425,7 +1448,10 @@ export default function PatientDetailPage() {
                                              <span>•</span>
                                              <span>{new Date(msg.createdAt).toLocaleString()}</span>
                                          </div>
-                                         <p className="whitespace-pre-wrap">{msg.text}</p>
+                                          <div 
+                                            className="prose prose-sm max-w-none text-inherit"
+                                            dangerouslySetInnerHTML={{ __html: msg.text }}
+                                          />
                                      </div>
                                  </div>
                              )
@@ -1510,13 +1536,14 @@ export default function PatientDetailPage() {
                     <h5 className="text-sm font-semibold text-gray-900 mb-3">Send Message</h5>
                     <div className="space-y-4">
                         <div>
-                           <textarea
+                        <div className="border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-purple-500 transition-all bg-gray-50">
+                           <RichTextEditor
                              value={providerNote}
-                             onChange={(e) => setProviderNote(e.target.value)}
-                             placeholder="Write a message or internal note..."
-                             rows={2}
-                             className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none resize-none focus:ring-2 focus:ring-purple-500"
+                             onChange={setProviderNote}
+                             placeholder="Type / to use templates..."
+                             className="p-3"
                            />
+                        </div>
                         </div>
 
                         <div className="flex justify-end">
