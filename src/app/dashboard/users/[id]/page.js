@@ -74,7 +74,58 @@ export default function PatientDetailPage() {
       [itemId]: !prev[itemId]
     }));
   };
-  
+
+  // Edit Modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAnswer, setEditingAnswer] = useState(null);
+  const [editQuestionText, setEditQuestionText] = useState("");
+  const [editAnswerContent, setEditAnswerContent] = useState("");
+
+  // Discontinue Modal state
+  const [showDiscontinueModal, setShowDiscontinueModal] = useState(false);
+  const [discontinuingAnswer, setDiscontinuingAnswer] = useState(null);
+  const [discontinueReason, setDiscontinueReason] = useState("");
+
+  // Prescription Modal state
+  const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
+  const [prescriptionAnswer, setPrescriptionAnswer] = useState(null);
+  const [prescriptionData, setPrescriptionData] = useState({
+    medication: "",
+    dosage: "",
+    frequency: "",
+    duration: "",
+    refills: 0,
+    instructions: "",
+  });
+
+  // History Viewer Modal state
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [viewingHistoryFor, setViewingHistoryFor] = useState(null);
+
+  // Medication and Treatment Options state
+  const [medicationOptions, setMedicationOptions] = useState([]);
+  const [treatmentOptions, setTreatmentOptions] = useState([]);
+
+  // Add Medication Modal state
+  const [showAddMedicationModal, setShowAddMedicationModal] = useState(false);
+  const [selectedMedicationOption, setSelectedMedicationOption] = useState("");
+  const [medicationData, setMedicationData] = useState({
+    dosage: "",
+    frequency: "",
+    duration: "",
+    instructions: "",
+  });
+
+  // Add Treatment Modal state
+  const [showAddTreatmentModal, setShowAddTreatmentModal] = useState(false);
+  const [selectedTreatmentOption, setSelectedTreatmentOption] = useState("");
+  const [treatmentData, setTreatmentData] = useState({
+    description: "",
+    startDate: "",
+    endDate: "",
+    notes: "",
+  });
+
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
@@ -181,34 +232,32 @@ export default function PatientDetailPage() {
       fetchSurveySubmissions(userData.data._id);
 
       // Fetch other data in parallel
-      const [categoriesRes, questionsRes, notesRes, doctorsRes, meRes] = await Promise.all([
+      const [categoriesRes, questionsRes, notesRes, doctorsRes, meRes, docCatsRes, medicationOptionsRes, treatmentOptionsRes] = await Promise.all([
         fetch("/api/categories"),
         fetch("/api/survey/questions"),
         fetch(`/api/users/${params.id}/notes`),
         fetch("/api/doctors"),
         fetch("/api/auth/me"),
         fetch("/api/document-categories"),
+        fetch("/api/medication-options"),
+        fetch("/api/treatment-options"),
       ]);
-      
+
       const categoriesData = await categoriesRes.json();
       const questionsData = await questionsRes.json();
       const notesData = await notesRes.json();
       const doctorsData = await doctorsRes.json();
-      const docCatsData = await meRes[1] ? await meRes[1].json() : await (await fetch("/api/document-categories")).json(); 
-      // Correcting Promise.all indexing above is risky without verified indexes. 
-      // Let's safe fetch it separately or adjust index. 
-      // Actually the array has 6 items now? No wait.
-      // fetch("/api/document-categories") is the 6th item (index 5)
-      // fetch("/api/auth/me") is 5th item (index 4)
-      
-      const docCatsRes = await fetch("/api/document-categories");
-      const docCatsData2 = await docCatsRes.json();
-      if (docCatsData2.success) setDocumentCategories(docCatsData2.data);
-      
+      const docCatsData = await docCatsRes.json();
+      const medicationOptionsData = await medicationOptionsRes.json();
+      const treatmentOptionsData = await treatmentOptionsRes.json();
+
       if (categoriesData.success) setCategories(categoriesData.data);
       if (questionsData.success) setQuestions(questionsData.data);
       if (notesData.success) setNotes(notesData.data);
       if (doctorsData.success) setDoctors(doctorsData.data);
+      if (docCatsData.success) setDocumentCategories(docCatsData.data);
+      if (medicationOptionsData.success) setMedicationOptions(medicationOptionsData.data);
+      if (treatmentOptionsData.success) setTreatmentOptions(treatmentOptionsData.data);
       
       try {
         const currentUserData = await meRes.json();
@@ -386,6 +435,369 @@ export default function PatientDetailPage() {
           surveyResponseId: {
             ...prev.surveyResponseId,
             answers: data.data.answers
+          }
+        }));
+      } else {
+        alert("Failed to update: " + data.error);
+      }
+    } catch (error) {
+      console.error("Update failed", error);
+      alert("Failed to save changes");
+    }
+  };
+
+  // Edit Modal Handlers
+  const openEditModal = (answer) => {
+    setEditingAnswer(answer);
+    setEditQuestionText(answer.questionText);
+    setEditAnswerContent(answer.answer);
+    setShowEditModal(true);
+  };
+
+  const closeEditModal = () => {
+    setShowEditModal(false);
+    setEditingAnswer(null);
+    setEditQuestionText("");
+    setEditAnswerContent("");
+  };
+
+  const handleEditSave = async () => {
+    if (!editQuestionText.trim()) {
+      alert("Question text is required");
+      return;
+    }
+
+    const currentAnswers = user.surveyResponseId.answers || [];
+    const updatedAnswers = currentAnswers.map(ans => {
+      if (ans._id === editingAnswer._id) {
+        // Create edit history entry
+        const historyEntry = {
+          editedBy: {
+            name: `${currentUser.firstName} ${currentUser.lastName}`,
+            role: currentUser.role,
+            id: currentUser._id,
+          },
+          editedAt: new Date(),
+          previousQuestionText: ans.questionText,
+          previousAnswer: ans.answer,
+          newQuestionText: editQuestionText,
+          newAnswer: editAnswerContent,
+        };
+
+        return {
+          ...ans,
+          questionText: editQuestionText,
+          answer: editAnswerContent,
+          editedBy: {
+            name: `${currentUser.firstName} ${currentUser.lastName}`,
+            role: currentUser.role,
+            id: currentUser._id,
+          },
+          editedAt: new Date(),
+          editHistory: [...(ans.editHistory || []), historyEntry],
+        };
+      }
+      return ans;
+    });
+
+    await updateSurveyResponse(updatedAnswers);
+    closeEditModal();
+  };
+
+  // Discontinue Modal Handlers
+  const openDiscontinueModal = (answer) => {
+    setDiscontinuingAnswer(answer);
+    setDiscontinueReason("");
+    setShowDiscontinueModal(true);
+  };
+
+  const closeDiscontinueModal = () => {
+    setShowDiscontinueModal(false);
+    setDiscontinuingAnswer(null);
+    setDiscontinueReason("");
+  };
+
+  const handleDiscontinue = async () => {
+    if (!discontinueReason.trim()) {
+      alert("Please provide a reason for discontinuing this item");
+      return;
+    }
+
+    const currentAnswers = user.surveyResponseId.answers || [];
+    const updatedAnswers = currentAnswers.map(ans => {
+      if (ans._id === discontinuingAnswer._id) {
+        return {
+          ...ans,
+          discontinued: true,
+          discontinuedBy: {
+            name: `${currentUser.firstName} ${currentUser.lastName}`,
+            role: currentUser.role,
+            id: currentUser._id,
+          },
+          discontinuedAt: new Date(),
+          discontinueReason: discontinueReason,
+        };
+      }
+      return ans;
+    });
+
+    await updateSurveyResponse(updatedAnswers);
+    closeDiscontinueModal();
+  };
+
+  // Prescription Modal Handlers
+  const openPrescriptionModal = (answer) => {
+    setPrescriptionAnswer(answer);
+    // Pre-fill if already has prescription
+    if (answer.isPrescription && answer.prescriptionDetails) {
+      setPrescriptionData({
+        medication: answer.prescriptionDetails.medication || "",
+        dosage: answer.prescriptionDetails.dosage || "",
+        frequency: answer.prescriptionDetails.frequency || "",
+        duration: answer.prescriptionDetails.duration || "",
+        refills: answer.prescriptionDetails.refills || 0,
+        instructions: answer.prescriptionDetails.instructions || "",
+      });
+    } else {
+      setPrescriptionData({
+        medication: "",
+        dosage: "",
+        frequency: "",
+        duration: "",
+        refills: 0,
+        instructions: "",
+      });
+    }
+    setShowPrescriptionModal(true);
+  };
+
+  const closePrescriptionModal = () => {
+    setShowPrescriptionModal(false);
+    setPrescriptionAnswer(null);
+    setPrescriptionData({
+      medication: "",
+      dosage: "",
+      frequency: "",
+      duration: "",
+      refills: 0,
+      instructions: "",
+    });
+  };
+
+  const handleAddPrescription = async () => {
+    if (!prescriptionData.medication.trim()) {
+      alert("Medication name is required");
+      return;
+    }
+
+    const currentAnswers = user.surveyResponseId.answers || [];
+    const updatedAnswers = currentAnswers.map(ans => {
+      if (ans._id === prescriptionAnswer._id) {
+        return {
+          ...ans,
+          isPrescription: true,
+          prescriptionDetails: {
+            ...prescriptionData,
+            addedBy: {
+              name: `${currentUser.firstName} ${currentUser.lastName}`,
+              role: currentUser.role,
+              id: currentUser._id,
+            },
+            addedAt: new Date(),
+          },
+        };
+      }
+      return ans;
+    });
+
+    await updateSurveyResponse(updatedAnswers);
+    closePrescriptionModal();
+  };
+
+  // History Modal Handlers
+  const openHistoryModal = (answer) => {
+    setViewingHistoryFor(answer);
+    setShowHistoryModal(true);
+  };
+
+  const closeHistoryModal = () => {
+    setShowHistoryModal(false);
+    setViewingHistoryFor(null);
+  };
+
+  // Medication Handlers
+  const openAddMedicationModal = () => {
+    setSelectedMedicationOption("");
+    setMedicationData({
+      dosage: "",
+      frequency: "",
+      duration: "",
+      instructions: "",
+    });
+    setShowAddMedicationModal(true);
+  };
+
+  const closeAddMedicationModal = () => {
+    setShowAddMedicationModal(false);
+    setSelectedMedicationOption("");
+    setMedicationData({
+      dosage: "",
+      frequency: "",
+      duration: "",
+      instructions: "",
+    });
+  };
+
+  const handleAddMedication = async () => {
+    if (!selectedMedicationOption) {
+      alert("Please select a medication");
+      return;
+    }
+
+    const selectedOption = medicationOptions.find(opt => opt._id === selectedMedicationOption);
+    if (!selectedOption) {
+      alert("Invalid medication selected");
+      return;
+    }
+
+    const newMedication = {
+      medicationOptionId: selectedOption._id,
+      name: selectedOption.name,
+      dosage: medicationData.dosage,
+      frequency: medicationData.frequency,
+      duration: medicationData.duration,
+      instructions: medicationData.instructions,
+      addedBy: {
+        name: `${currentUser.firstName} ${currentUser.lastName}`,
+        role: currentUser.role,
+        id: currentUser._id,
+      },
+      addedAt: new Date(),
+    };
+
+    const currentMedications = user.surveyResponseId.medications || [];
+    const updatedMedications = [newMedication, ...currentMedications];
+
+    await updateMedications(updatedMedications);
+    closeAddMedicationModal();
+  };
+
+  const handleDeleteMedication = async (medicationId) => {
+    if (!confirm("Are you sure you want to delete this medication?")) return;
+
+    const currentMedications = user.surveyResponseId.medications || [];
+    const updatedMedications = currentMedications.filter(m => m._id !== medicationId);
+
+    await updateMedications(updatedMedications);
+  };
+
+  const updateMedications = async (newMedications) => {
+    try {
+      const res = await fetch(`/api/survey/responses/${user.surveyResponseId._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ medications: newMedications }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setUser(prev => ({
+          ...prev,
+          surveyResponseId: {
+            ...prev.surveyResponseId,
+            medications: data.data.medications
+          }
+        }));
+      } else {
+        alert("Failed to update: " + data.error);
+      }
+    } catch (error) {
+      console.error("Update failed", error);
+      alert("Failed to save changes");
+    }
+  };
+
+  // Treatment Handlers
+  const openAddTreatmentModal = () => {
+    setSelectedTreatmentOption("");
+    setTreatmentData({
+      description: "",
+      startDate: "",
+      endDate: "",
+      notes: "",
+    });
+    setShowAddTreatmentModal(true);
+  };
+
+  const closeAddTreatmentModal = () => {
+    setShowAddTreatmentModal(false);
+    setSelectedTreatmentOption("");
+    setTreatmentData({
+      description: "",
+      startDate: "",
+      endDate: "",
+      notes: "",
+    });
+  };
+
+  const handleAddTreatment = async () => {
+    if (!selectedTreatmentOption) {
+      alert("Please select a treatment");
+      return;
+    }
+
+    const selectedOption = treatmentOptions.find(opt => opt._id === selectedTreatmentOption);
+    if (!selectedOption) {
+      alert("Invalid treatment selected");
+      return;
+    }
+
+    const newTreatment = {
+      treatmentOptionId: selectedOption._id,
+      name: selectedOption.name,
+      description: treatmentData.description,
+      startDate: treatmentData.startDate ? new Date(treatmentData.startDate) : null,
+      endDate: treatmentData.endDate ? new Date(treatmentData.endDate) : null,
+      notes: treatmentData.notes,
+      addedBy: {
+        name: `${currentUser.firstName} ${currentUser.lastName}`,
+        role: currentUser.role,
+        id: currentUser._id,
+      },
+      addedAt: new Date(),
+    };
+
+    const currentTreatments = user.surveyResponseId.treatments || [];
+    const updatedTreatments = [newTreatment, ...currentTreatments];
+
+    await updateTreatments(updatedTreatments);
+    closeAddTreatmentModal();
+  };
+
+  const handleDeleteTreatment = async (treatmentId) => {
+    if (!confirm("Are you sure you want to delete this treatment?")) return;
+
+    const currentTreatments = user.surveyResponseId.treatments || [];
+    const updatedTreatments = currentTreatments.filter(t => t._id !== treatmentId);
+
+    await updateTreatments(updatedTreatments);
+  };
+
+  const updateTreatments = async (newTreatments) => {
+    try {
+      const res = await fetch(`/api/survey/responses/${user.surveyResponseId._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ treatments: newTreatments }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setUser(prev => ({
+          ...prev,
+          surveyResponseId: {
+            ...prev.surveyResponseId,
+            treatments: data.data.treatments
           }
         }));
       } else {
@@ -638,10 +1050,63 @@ export default function PatientDetailPage() {
                   const shouldShowToggle = answerText.length > 100;
 
                   return (
-                  <div key={idx} className="p-4 flex justify-between group">
+                  <div key={idx} className={`p-4 flex justify-between group relative ${answer.discontinued ? 'bg-red-50 border-l-4 border-l-red-400' : ''}`}>
                     <div className="flex-1 min-w-0 pr-4">
+                      {/* Action Buttons - Top Right (Admin & Doctor Only) */}
+                      {(currentUser?.role === 'admin' || currentUser?.role === 'doctor') && !answer.discontinued && (
+                        <div className="float-right flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                          <button
+                            onClick={() => openEditModal(answer)}
+                            className="p-1.5 text-teal-600 hover:text-teal-800 hover:bg-teal-50 rounded transition-colors"
+                            title="Edit"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => openDiscontinueModal(answer)}
+                            className="p-1.5 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded transition-colors"
+                            title="Discontinue"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="m18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => openPrescriptionModal(answer)}
+                            className="p-1.5 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded transition-colors"
+                            title={answer.isPrescription ? 'Edit Prescription' : 'Add Prescription'}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 16a9.065 9.065 0 0 1-6.23-.693L5 15.3m14.8 0 .364 1.456a2.25 2.25 0 0 1-1.516 2.814l-3.553.89c-1.524.381-3.07.381-4.594 0l-3.553-.89a2.25 2.25 0 0 1-1.516-2.814L5 15.3" />
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Badges */}
+                      <div className="flex gap-2 mb-2 flex-wrap">
+                        {answer.discontinued && (
+                          <span className="px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700 rounded">
+                            DISCONTINUED
+                          </span>
+                        )}
+                        {answer.isPrescription && (
+                          <span className="px-2 py-0.5 text-xs font-semibold bg-purple-100 text-purple-700 rounded flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 16a9.065 9.065 0 0 1-6.23-.693L5 15.3m14.8 0 .364 1.456a2.25 2.25 0 0 1-1.516 2.814l-3.553.89c-1.524.381-3.07.381-4.594 0l-3.553-.89a2.25 2.25 0 0 1-1.516-2.814L5 15.3" />
+                            </svg>
+                            Rx PRESCRIPTION
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Question and Answer */}
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm text-gray-500 flex-1">{answer.questionText}</p>
+                        <p className={`text-sm text-gray-500 flex-1 ${answer.discontinued ? 'line-through' : ''}`}>
+                          {answer.questionText}
+                        </p>
                         {shouldShowToggle && (
                           <button
                             onClick={() => toggleItem(itemId)}
@@ -662,25 +1127,81 @@ export default function PatientDetailPage() {
                         )}
                       </div>
                       <div
-                        className={`quill-content break-words overflow-wrap-anywhere ${!isExpanded && shouldShowToggle ? 'line-clamp-2' : ''}`}
+                        className={`quill-content break-words overflow-wrap-anywhere ${!isExpanded && shouldShowToggle ? 'line-clamp-2' : ''} ${answer.discontinued ? 'opacity-60 line-through' : ''}`}
                         dangerouslySetInnerHTML={{ __html: answerContent }}
                       />
+
+                      {/* Prescription Details */}
+                      {answer.isPrescription && answer.prescriptionDetails && (
+                        <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-200 text-sm">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <span className="font-semibold text-purple-900">Medication:</span> {answer.prescriptionDetails.medication}
+                            </div>
+                            {answer.prescriptionDetails.dosage && (
+                              <div>
+                                <span className="font-semibold text-purple-900">Dosage:</span> {answer.prescriptionDetails.dosage}
+                              </div>
+                            )}
+                            {answer.prescriptionDetails.frequency && (
+                              <div>
+                                <span className="font-semibold text-purple-900">Frequency:</span> {answer.prescriptionDetails.frequency}
+                              </div>
+                            )}
+                            {answer.prescriptionDetails.duration && (
+                              <div>
+                                <span className="font-semibold text-purple-900">Duration:</span> {answer.prescriptionDetails.duration}
+                              </div>
+                            )}
+                            {answer.prescriptionDetails.refills !== undefined && (
+                              <div>
+                                <span className="font-semibold text-purple-900">Refills:</span> {answer.prescriptionDetails.refills}
+                              </div>
+                            )}
+                            {answer.prescriptionDetails.instructions && (
+                              <div className="col-span-2">
+                                <span className="font-semibold text-purple-900">Instructions:</span> {answer.prescriptionDetails.instructions}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Added By / Edited By / Discontinued Info */}
+                      <div className="mt-2 text-xs text-gray-500 space-y-1">
+                        {answer.addedBy && (
+                          <p>
+                            <span className="font-medium">Added by:</span> {answer.addedBy.name} ({answer.addedBy.role}) on {new Date(answer.addedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                          </p>
+                        )}
+                        {answer.editedBy && (
+                          <p className="text-teal-700">
+                            <span className="font-medium">Edited by:</span> {answer.editedBy.name} on {new Date(answer.editedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                            {answer.editHistory?.length > 0 && (
+                              <button
+                                onClick={() => openHistoryModal(answer)}
+                                className="ml-2 text-teal-600 hover:text-teal-800 underline font-medium"
+                              >
+                                View History ({answer.editHistory.length} {answer.editHistory.length === 1 ? 'edit' : 'edits'})
+                              </button>
+                            )}
+                          </p>
+                        )}
+                        {answer.discontinued && answer.discontinuedBy && (
+                          <p className="text-red-600 font-medium">
+                            <span className="font-semibold">Discontinued by:</span> {answer.discontinuedBy.name} on {new Date(answer.discontinuedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                            <br />
+                            <span className="font-semibold">Reason:</span> {answer.discontinueReason}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-4">
-                      {answer.addedBy && (
-                        <div className="text-right text-xs">
-                          <p className="text-gray-900 font-medium">{answer.addedBy.name}</p>
-                          <p className="text-gray-500 capitalize">{answer.addedBy.role}</p>
-                          <p className="text-gray-400">
-                            {answer.addedAt ? new Date(answer.addedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : ''}
-                          </p>
-                        </div>
-                      )}
-                      
-                      <button 
+                      <button
                         onClick={() => handleDeleteItem(answer._id)}
                         className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Delete permanently"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
@@ -708,6 +1229,164 @@ export default function PatientDetailPage() {
               </button>
             </div>
           )}
+
+          {/* Medication Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-4">
+            <div className="px-4 py-3 bg-blue-600 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-semibold text-white flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 16a9.065 9.065 0 0 1-6.23-.693L5 15.3m14.8 0 .364 1.456a2.25 2.25 0 0 1-1.516 2.814l-3.553.89c-1.524.381-3.07.381-4.594 0l-3.553-.89a2.25 2.25 0 0 1-1.516-2.814L5 15.3" />
+                </svg>
+                Medication
+              </h3>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-white/80 bg-white/20 px-2 py-1 rounded-full">
+                  {user?.surveyResponseId?.medications?.length || 0} items
+                </span>
+                {(currentUser?.role === 'admin' || currentUser?.role === 'doctor') && (
+                  <button
+                    onClick={openAddMedicationModal}
+                    className="text-white/80 hover:text-white transition-colors p-1"
+                    title="Add Medication"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {user?.surveyResponseId?.medications && user.surveyResponseId.medications.length > 0 ? (
+                user.surveyResponseId.medications.map((medication, idx) => (
+                  <div key={idx} className={`p-4 ${medication.discontinued ? 'bg-red-50 border-l-4 border-l-red-400' : ''}`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        {medication.discontinued && (
+                          <span className="inline-block px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700 rounded mb-2">
+                            DISCONTINUED
+                          </span>
+                        )}
+                        <p className={`font-semibold text-gray-900 mb-2 ${medication.discontinued ? 'line-through' : ''}`}>
+                          {medication.name}
+                        </p>
+                        <div className="text-sm text-gray-600 space-y-1">
+                          {medication.dosage && <p><strong>Dosage:</strong> {medication.dosage}</p>}
+                          {medication.frequency && <p><strong>Frequency:</strong> {medication.frequency}</p>}
+                          {medication.duration && <p><strong>Duration:</strong> {medication.duration}</p>}
+                          {medication.instructions && <p><strong>Instructions:</strong> {medication.instructions}</p>}
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500">
+                          {medication.addedBy && (
+                            <p>Added by {medication.addedBy.name} ({medication.addedBy.role}) on {new Date(medication.addedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</p>
+                          )}
+                          {medication.discontinued && medication.discontinuedBy && (
+                            <p className="text-red-600 font-medium mt-1">
+                              Discontinued by {medication.discontinuedBy.name} - {medication.discontinueReason}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      {(currentUser?.role === 'admin' || currentUser?.role === 'doctor') && (
+                        <button
+                          onClick={() => handleDeleteMedication(medication._id)}
+                          className="text-gray-300 hover:text-red-500 transition-colors ml-4"
+                          title="Delete"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center text-sm text-gray-500">
+                  No medications recorded
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Treatment Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-4">
+            <div className="px-4 py-3 bg-green-600 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-semibold text-white flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
+                </svg>
+                Treatment
+              </h3>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-white/80 bg-white/20 px-2 py-1 rounded-full">
+                  {user?.surveyResponseId?.treatments?.length || 0} items
+                </span>
+                {(currentUser?.role === 'admin' || currentUser?.role === 'doctor') && (
+                  <button
+                    onClick={openAddTreatmentModal}
+                    className="text-white/80 hover:text-white transition-colors p-1"
+                    title="Add Treatment"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {user?.surveyResponseId?.treatments && user.surveyResponseId.treatments.length > 0 ? (
+                user.surveyResponseId.treatments.map((treatment, idx) => (
+                  <div key={idx} className={`p-4 ${treatment.discontinued ? 'bg-red-50 border-l-4 border-l-red-400' : ''}`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        {treatment.discontinued && (
+                          <span className="inline-block px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700 rounded mb-2">
+                            DISCONTINUED
+                          </span>
+                        )}
+                        <p className={`font-semibold text-gray-900 mb-2 ${treatment.discontinued ? 'line-through' : ''}`}>
+                          {treatment.name}
+                        </p>
+                        <div className="text-sm text-gray-600 space-y-1">
+                          {treatment.description && <p><strong>Description:</strong> {treatment.description}</p>}
+                          {treatment.startDate && <p><strong>Start Date:</strong> {new Date(treatment.startDate).toLocaleDateString()}</p>}
+                          {treatment.endDate && <p><strong>End Date:</strong> {new Date(treatment.endDate).toLocaleDateString()}</p>}
+                          {treatment.notes && <p><strong>Notes:</strong> {treatment.notes}</p>}
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500">
+                          {treatment.addedBy && (
+                            <p>Added by {treatment.addedBy.name} ({treatment.addedBy.role}) on {new Date(treatment.addedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</p>
+                          )}
+                          {treatment.discontinued && treatment.discontinuedBy && (
+                            <p className="text-red-600 font-medium mt-1">
+                              Discontinued by {treatment.discontinuedBy.name} - {treatment.discontinueReason}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      {(currentUser?.role === 'admin' || currentUser?.role === 'doctor') && (
+                        <button
+                          onClick={() => handleDeleteTreatment(treatment._id)}
+                          className="text-gray-300 hover:text-red-500 transition-colors ml-4"
+                          title="Delete"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center text-sm text-gray-500">
+                  No treatments recorded
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Middle Panel - Create Note Only */}
@@ -1354,7 +2033,7 @@ export default function PatientDetailPage() {
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             drag={!isSubmissionExpanded}
             dragMomentum={false}
-            className={isSubmissionExpanded ? "fixed inset-0 z-50 bg-white flex flex-col" : "fixed top-24 right-6 w-full max-w-lg bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[80vh] overflow-hidden"}
+            className={isSubmissionExpanded ? "fixed inset-0 z-50 bg-white flex flex-col" : "fixed top-24 right-6 w-full max-w-3xl bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[90vh] overflow-hidden"}
             style={{ cursor: "default" }}
           >
             <div 
@@ -1756,6 +2435,463 @@ export default function PatientDetailPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-gray-100 bg-teal-700 rounded-t-xl flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">Edit Patient Data</h3>
+              <button
+                onClick={closeEditModal}
+                className="text-white/70 hover:text-white transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); handleEditSave(); }} className="p-6 overflow-y-auto space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Question Text</label>
+                <textarea
+                  value={editQuestionText}
+                  onChange={(e) => setEditQuestionText(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-teal-600 outline-none"
+                  rows={2}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Answer</label>
+                <RichTextEditor
+                  value={editAnswerContent}
+                  onChange={setEditAnswerContent}
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closeEditModal}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Discontinue Modal */}
+      {showDiscontinueModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-lg">
+            <div className="px-6 py-4 border-b border-gray-100 bg-orange-600 rounded-t-xl flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">Discontinue Item</h3>
+              <button
+                onClick={closeDiscontinueModal}
+                className="text-white/70 hover:text-white transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); handleDiscontinue(); }} className="p-6 space-y-4">
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-orange-800">
+                  <strong>Warning:</strong> This item will be marked as discontinued but will remain visible in the patient&apos;s record with a discontinued badge.
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reason for Discontinuing <span className="text-red-500">*</span></label>
+                <textarea
+                  value={discontinueReason}
+                  onChange={(e) => setDiscontinueReason(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-600 focus:border-orange-600 outline-none"
+                  rows={3}
+                  placeholder="Explain why this item is being discontinued..."
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closeDiscontinueModal}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                >
+                  Confirm Discontinue
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Prescription Modal */}
+      {showPrescriptionModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-gray-100 bg-purple-600 rounded-t-xl flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 16a9.065 9.065 0 0 1-6.23-.693L5 15.3m14.8 0 .364 1.456a2.25 2.25 0 0 1-1.516 2.814l-3.553.89c-1.524.381-3.07.381-4.594 0l-3.553-.89a2.25 2.25 0 0 1-1.516-2.814L5 15.3" />
+                </svg>
+                {prescriptionAnswer?.isPrescription ? 'Edit Prescription Details' : 'Add Prescription Details'}
+              </h3>
+              <button
+                onClick={closePrescriptionModal}
+                className="text-white/70 hover:text-white transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); handleAddPrescription(); }} className="p-6 overflow-y-auto space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Medication Name <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={prescriptionData.medication}
+                    onChange={(e) => setPrescriptionData({...prescriptionData, medication: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none"
+                    placeholder="e.g., Amoxicillin"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Dosage</label>
+                  <input
+                    type="text"
+                    value={prescriptionData.dosage}
+                    onChange={(e) => setPrescriptionData({...prescriptionData, dosage: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none"
+                    placeholder="e.g., 500mg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Frequency</label>
+                  <input
+                    type="text"
+                    value={prescriptionData.frequency}
+                    onChange={(e) => setPrescriptionData({...prescriptionData, frequency: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none"
+                    placeholder="e.g., Twice daily"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
+                  <input
+                    type="text"
+                    value={prescriptionData.duration}
+                    onChange={(e) => setPrescriptionData({...prescriptionData, duration: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none"
+                    placeholder="e.g., 7 days"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Number of Refills</label>
+                  <input
+                    type="number"
+                    value={prescriptionData.refills}
+                    onChange={(e) => setPrescriptionData({...prescriptionData, refills: parseInt(e.target.value) || 0})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none"
+                    min="0"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Special Instructions</label>
+                  <textarea
+                    value={prescriptionData.instructions}
+                    onChange={(e) => setPrescriptionData({...prescriptionData, instructions: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none"
+                    rows={3}
+                    placeholder="e.g., Take with food"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closePrescriptionModal}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  Save Prescription
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit History Viewer Modal */}
+      {showHistoryModal && viewingHistoryFor && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-gray-100 bg-teal-700 rounded-t-xl flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">Edit History - {viewingHistoryFor.questionText}</h3>
+              <button
+                onClick={closeHistoryModal}
+                className="text-white/70 hover:text-white transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto space-y-4">
+              {viewingHistoryFor.editHistory && viewingHistoryFor.editHistory.length > 0 ? (
+                [...viewingHistoryFor.editHistory].reverse().map((edit, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-gray-900">
+                        Edit #{viewingHistoryFor.editHistory.length - index}
+                      </h4>
+                      <span className="text-sm text-gray-600">
+                        {new Date(edit.editedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700 mb-3">
+                      by <strong>{edit.editedBy?.name}</strong> ({edit.editedBy?.role})
+                    </p>
+                    <div className="space-y-2">
+                      {edit.previousQuestionText !== edit.newQuestionText && (
+                        <div className="bg-white rounded p-3 border border-gray-200">
+                          <p className="text-xs font-medium text-gray-500 mb-1">Question:</p>
+                          <p className="text-sm text-red-600 line-through">{edit.previousQuestionText}</p>
+                          <p className="text-sm text-green-600 mt-1">→ {edit.newQuestionText}</p>
+                        </div>
+                      )}
+                      {edit.previousAnswer !== edit.newAnswer && (
+                        <div className="bg-white rounded p-3 border border-gray-200">
+                          <p className="text-xs font-medium text-gray-500 mb-1">Answer:</p>
+                          <div className="text-sm text-red-600 line-through quill-content" dangerouslySetInnerHTML={{ __html: edit.previousAnswer || 'None' }} />
+                          <div className="text-sm text-green-600 mt-1 quill-content" dangerouslySetInnerHTML={{ __html: edit.newAnswer || 'None' }} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 text-center py-8">No edit history available</p>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={closeHistoryModal}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Medication Modal */}
+      {showAddMedicationModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-lg">
+            <div className="px-6 py-4 border-b border-gray-100 bg-blue-600 rounded-t-xl flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">Add Medication</h3>
+              <button
+                onClick={closeAddMedicationModal}
+                className="text-white/70 hover:text-white transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); handleAddMedication(); }} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Select Medication <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={selectedMedicationOption}
+                  onChange={(e) => setSelectedMedicationOption(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none"
+                  required
+                >
+                  <option value="">Choose a medication...</option>
+                  {medicationOptions.filter(opt => opt.isActive).map(opt => (
+                    <option key={opt._id} value={opt._id}>{opt.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Dosage</label>
+                <input
+                  type="text"
+                  value={medicationData.dosage}
+                  onChange={(e) => setMedicationData({...medicationData, dosage: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none"
+                  placeholder="e.g., 500mg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Frequency</label>
+                <input
+                  type="text"
+                  value={medicationData.frequency}
+                  onChange={(e) => setMedicationData({...medicationData, frequency: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none"
+                  placeholder="e.g., Twice daily"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
+                <input
+                  type="text"
+                  value={medicationData.duration}
+                  onChange={(e) => setMedicationData({...medicationData, duration: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none"
+                  placeholder="e.g., 7 days"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Special Instructions</label>
+                <textarea
+                  value={medicationData.instructions}
+                  onChange={(e) => setMedicationData({...medicationData, instructions: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none"
+                  rows={3}
+                  placeholder="e.g., Take with food"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closeAddMedicationModal}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Add Medication
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Treatment Modal */}
+      {showAddTreatmentModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-lg">
+            <div className="px-6 py-4 border-b border-gray-100 bg-green-600 rounded-t-xl flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">Add Treatment</h3>
+              <button
+                onClick={closeAddTreatmentModal}
+                className="text-white/70 hover:text-white transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); handleAddTreatment(); }} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Select Treatment <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={selectedTreatmentOption}
+                  onChange={(e) => setSelectedTreatmentOption(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none"
+                  required
+                >
+                  <option value="">Choose a treatment...</option>
+                  {treatmentOptions.filter(opt => opt.isActive).map(opt => (
+                    <option key={opt._id} value={opt._id}>{opt.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  value={treatmentData.description}
+                  onChange={(e) => setTreatmentData({...treatmentData, description: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none"
+                  rows={2}
+                  placeholder="Treatment description..."
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                  <input
+                    type="date"
+                    value={treatmentData.startDate}
+                    onChange={(e) => setTreatmentData({...treatmentData, startDate: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                  <input
+                    type="date"
+                    value={treatmentData.endDate}
+                    onChange={(e) => setTreatmentData({...treatmentData, endDate: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea
+                  value={treatmentData.notes}
+                  onChange={(e) => setTreatmentData({...treatmentData, notes: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 outline-none"
+                  rows={3}
+                  placeholder="Additional notes..."
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closeAddTreatmentModal}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Add Treatment
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

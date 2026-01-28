@@ -35,7 +35,133 @@ const SurveyResponseSchema = new mongoose.Schema({
     addedAt: {
       type: Date,
       default: Date.now
-    }
+    },
+    // Edit tracking
+    editedBy: {
+      name: String,
+      role: String,
+      id: mongoose.Schema.Types.ObjectId,
+    },
+    editedAt: Date,
+    editHistory: [{
+      editedBy: {
+        name: String,
+        role: String,
+        id: mongoose.Schema.Types.ObjectId,
+      },
+      editedAt: Date,
+      previousQuestionText: String,
+      previousAnswer: mongoose.Schema.Types.Mixed,
+      newQuestionText: String,
+      newAnswer: mongoose.Schema.Types.Mixed,
+    }],
+    // Discontinue tracking
+    discontinued: {
+      type: Boolean,
+      default: false
+    },
+    discontinuedBy: {
+      name: String,
+      role: String,
+      id: mongoose.Schema.Types.ObjectId,
+    },
+    discontinuedAt: Date,
+    discontinueReason: String,
+    // Prescription details
+    isPrescription: {
+      type: Boolean,
+      default: false
+    },
+    prescriptionDetails: {
+      medication: String,
+      dosage: String,
+      frequency: String,
+      duration: String,
+      refills: Number,
+      instructions: String,
+      addedBy: {
+        name: String,
+        role: String,
+        id: mongoose.Schema.Types.ObjectId,
+      },
+      addedAt: Date,
+    },
+  }],
+  // Medication items
+  medications: [{
+    medicationOptionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'MedicationOption',
+    },
+    name: String,
+    dosage: String,
+    frequency: String,
+    duration: String,
+    instructions: String,
+    addedBy: {
+      name: String,
+      role: String,
+      id: mongoose.Schema.Types.ObjectId,
+    },
+    addedAt: {
+      type: Date,
+      default: Date.now
+    },
+    editedBy: {
+      name: String,
+      role: String,
+      id: mongoose.Schema.Types.ObjectId,
+    },
+    editedAt: Date,
+    discontinued: {
+      type: Boolean,
+      default: false
+    },
+    discontinuedBy: {
+      name: String,
+      role: String,
+      id: mongoose.Schema.Types.ObjectId,
+    },
+    discontinuedAt: Date,
+    discontinueReason: String,
+  }],
+  // Treatment items
+  treatments: [{
+    treatmentOptionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'TreatmentOption',
+    },
+    name: String,
+    description: String,
+    startDate: Date,
+    endDate: Date,
+    notes: String,
+    addedBy: {
+      name: String,
+      role: String,
+      id: mongoose.Schema.Types.ObjectId,
+    },
+    addedAt: {
+      type: Date,
+      default: Date.now
+    },
+    editedBy: {
+      name: String,
+      role: String,
+      id: mongoose.Schema.Types.ObjectId,
+    },
+    editedAt: Date,
+    discontinued: {
+      type: Boolean,
+      default: false
+    },
+    discontinuedBy: {
+      name: String,
+      role: String,
+      id: mongoose.Schema.Types.ObjectId,
+    },
+    discontinuedAt: Date,
+    discontinueReason: String,
   }],
   status: {
     type: String,
