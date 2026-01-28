@@ -14,7 +14,7 @@ export default function DashboardClientLayout({ children }) {
   if (isProfilePage) {
     return (
       <div className="min-h-screen bg-muted flex flex-col">
-        <main className="flex-1 p-6">
+        <main className="flex-1 px-4">
           {children}
         </main>
       </div>

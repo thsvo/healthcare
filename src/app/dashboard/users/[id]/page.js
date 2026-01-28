@@ -58,10 +58,20 @@ export default function PatientDetailPage() {
   // Collapsible state for categories
   const [expandedCategories, setExpandedCategories] = useState({});
 
+  // Collapsible state for individual items
+  const [expandedItems, setExpandedItems] = useState({});
+
   const toggleCategory = (categoryId) => {
     setExpandedCategories(prev => ({
       ...prev,
       [categoryId]: !prev[categoryId]
+    }));
+  };
+
+  const toggleItem = (itemId) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [itemId]: !prev[itemId]
     }));
   };
   
@@ -620,16 +630,43 @@ export default function PatientDetailPage() {
                 {(expandedCategories[categoryId] 
                   ? answersByCategory[categoryId] 
                   : answersByCategory[categoryId].slice(0, 1)
-                ).map((answer, idx) => (
+                ).map((answer, idx) => {
+                  const itemId = answer._id || `${categoryId}-${idx}`;
+                  const isExpanded = expandedItems[itemId];
+                  const answerContent = Array.isArray(answer.answer) ? answer.answer.join(', ') : (answer.answer || '<span class="text-gray-400 italic">No answer</span>');
+                  const answerText = answerContent.replace(/<[^>]*>/g, ''); // Strip HTML for length check
+                  const shouldShowToggle = answerText.length > 100;
+
+                  return (
                   <div key={idx} className="p-4 flex justify-between group">
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">{answer.questionText}</p>
-                      <div 
-                        className="quill-content"
-                        dangerouslySetInnerHTML={{ __html: Array.isArray(answer.answer) ? answer.answer.join(', ') : (answer.answer || '<span class="text-gray-400 italic">No answer</span>') }}
+                    <div className="flex-1 min-w-0 pr-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-sm text-gray-500 flex-1">{answer.questionText}</p>
+                        {shouldShowToggle && (
+                          <button
+                            onClick={() => toggleItem(itemId)}
+                            className="text-teal-600 hover:text-teal-700 transition-colors p-1 flex-shrink-0"
+                            title={isExpanded ? 'Collapse' : 'Expand'}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={2.5}
+                              stroke="currentColor"
+                              className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                      <div
+                        className={`quill-content break-words overflow-wrap-anywhere ${!isExpanded && shouldShowToggle ? 'line-clamp-2' : ''}`}
+                        dangerouslySetInnerHTML={{ __html: answerContent }}
                       />
                     </div>
-                    
+
                     <div className="flex items-center gap-4">
                       {answer.addedBy && (
                         <div className="text-right text-xs">
@@ -651,7 +688,8 @@ export default function PatientDetailPage() {
                       </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
