@@ -480,8 +480,11 @@ export default function PatientDetailPage() {
               {user.firstName?.charAt(0) || user.email?.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h1 className="text-2xl font-bold">
+              <h1 className="text-2xl font-bold flex items-center gap-2">
                 {user.firstName} {user.lastName}
+                {user.patientId && (
+                  <span className="text-white/60 font-mono text-lg font-normal">#{user.patientId}</span>
+                )}
               </h1>
               <p className="text-white/80 text-sm mt-1">
                 Registered: {new Date(user.createdAt).toLocaleDateString()}

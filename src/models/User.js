@@ -13,6 +13,11 @@ const DocumentSchema = new mongoose.Schema({
 });
 
 const UserSchema = new mongoose.Schema({
+  patientId: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
   email: {
     type: String,
     required: [true, 'Please provide an email.'],
@@ -87,8 +92,25 @@ const UserSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// Hash password before saving
+// Hash password before saving and generate Patient ID
 UserSchema.pre('save', async function() {
+  if (this.isNew && this.role === 'user' && !this.patientId) {
+    try {
+      const lastUser = await mongoose.model('User').findOne({ 
+        role: 'user', 
+        patientId: { $exists: true } 
+      }).sort({ patientId: -1 });
+
+      let nextId = 10001;
+      if (lastUser && lastUser.patientId) {
+        nextId = parseInt(lastUser.patientId) + 1;
+      }
+      this.patientId = nextId.toString();
+    } catch (err) {
+      console.error('Error generating patientId:', err);
+    }
+  }
+
   if (!this.isModified('password')) return;
   this.password = await bcrypt.hash(this.password, 12);
 });

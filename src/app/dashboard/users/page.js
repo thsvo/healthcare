@@ -220,8 +220,11 @@ export default function UsersPage() {
                         {user.firstName?.charAt(0) || user.email?.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-gray-900 flex items-center gap-2">
                           {user.firstName} {user.lastName}
+                          {user.patientId && (
+                            <span className="text-gray-400 font-mono text-xs font-normal">#{user.patientId}</span>
+                          )}
                         </p>
                         <p className="text-sm text-gray-500">{user.email}</p>
                       </div>
