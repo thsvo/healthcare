@@ -182,6 +182,8 @@ const SurveyResponseSchema = new mongoose.Schema({
   },
   followUp: String,
   refillReminder: String,
+  clinicalMedication: String,
+  clinicalTreatment: String,
   providerNote: String, // Legacy note field
   messages: [{
     senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

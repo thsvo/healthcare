@@ -39,6 +39,8 @@ export default function PatientDetailPage() {
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [followUp, setFollowUp] = useState("");
   const [refillReminder, setRefillReminder] = useState("");
+  const [clinicalMedication, setClinicalMedication] = useState("");
+  const [clinicalTreatment, setClinicalTreatment] = useState("");
   const [providerNote, setProviderNote] = useState("");
 
   const [actionLoading, setActionLoading] = useState(false);
@@ -105,6 +107,8 @@ export default function PatientDetailPage() {
   // Medication and Treatment Options state
   const [medicationOptions, setMedicationOptions] = useState([]);
   const [treatmentOptions, setTreatmentOptions] = useState([]);
+  const [followUpOptions, setFollowUpOptions] = useState([]);
+  const [refillReminderOptions, setRefillReminderOptions] = useState([]);
 
   // Add Medication Modal state
   const [showAddMedicationModal, setShowAddMedicationModal] = useState(false);
@@ -235,7 +239,7 @@ export default function PatientDetailPage() {
       fetchSurveySubmissions(userData.data._id);
 
       // Fetch other data in parallel
-      const [categoriesRes, questionsRes, notesRes, doctorsRes, meRes, docCatsRes, medicationOptionsRes, treatmentOptionsRes, servicesRes] = await Promise.all([
+      const [categoriesRes, questionsRes, notesRes, doctorsRes, meRes, docCatsRes, medicationOptionsRes, treatmentOptionsRes, followUpOptionsRes, refillReminderOptionsRes, servicesRes] = await Promise.all([
         fetch("/api/categories"),
         fetch("/api/survey/questions"),
         fetch(`/api/users/${params.id}/notes`),
@@ -244,6 +248,8 @@ export default function PatientDetailPage() {
         fetch("/api/document-categories"),
         fetch("/api/medication-options"),
         fetch("/api/treatment-options"),
+        fetch("/api/followup-options"),
+        fetch("/api/refill-reminder-options"),
         fetch("/api/services"),
       ]);
 
@@ -254,6 +260,8 @@ export default function PatientDetailPage() {
       const docCatsData = await docCatsRes.json();
       const medicationOptionsData = await medicationOptionsRes.json();
       const treatmentOptionsData = await treatmentOptionsRes.json();
+      const followUpOptionsData = await followUpOptionsRes.json();
+      const refillReminderOptionsData = await refillReminderOptionsRes.json();
       const servicesData = await servicesRes.json();
 
       if (categoriesData.success) setCategories(categoriesData.data);
@@ -263,6 +271,8 @@ export default function PatientDetailPage() {
       if (docCatsData.success) setDocumentCategories(docCatsData.data);
       if (medicationOptionsData.success) setMedicationOptions(medicationOptionsData.data);
       if (treatmentOptionsData.success) setTreatmentOptions(treatmentOptionsData.data);
+      if (followUpOptionsData.success) setFollowUpOptions(followUpOptionsData.data);
+      if (refillReminderOptionsData.success) setRefillReminderOptions(refillReminderOptionsData.data);
       if (servicesData.success) setServices(servicesData.data);
       
       try {
@@ -1448,6 +1458,8 @@ export default function PatientDetailPage() {
                     setSelectedDoctor(submission.assignedDoctor?._id || "");
                     setFollowUp(submission.followUp || "");
                     setRefillReminder(submission.refillReminder || "");
+                    setClinicalMedication(submission.clinicalMedication || "");
+                    setClinicalTreatment(submission.clinicalTreatment || "");
                     setProviderNote(submission.providerNote || "");
                   }}
                 >
@@ -2221,13 +2233,13 @@ export default function PatientDetailPage() {
                                 className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
                               >
                                <option value="">Select interval</option>
-                               <option value="7 Days">7 Days</option>
-                               <option value="14 Days">14 Days</option>
-                               <option value="30 Days">30 Days</option>
+                               {followUpOptions.filter(opt => opt.isActive).map(option => (
+                                 <option key={option._id} value={option.name}>{option.name}</option>
+                               ))}
                                <option value="None">None</option>
                               </select>
                             </div>
-                            
+
                             <div>
                               <label className="block text-xs font-medium text-gray-500 mb-1">Refill Reminder</label>
                                <select
@@ -2236,13 +2248,39 @@ export default function PatientDetailPage() {
                                 className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
                               >
                                <option value="">Select interval</option>
-                               <option value="4 weeks">4 weeks</option>
-                               <option value="5 weeks">5 weeks</option>
-                               <option value="6 weeks">6 weeks</option>
-                               <option value="8 weeks">8 weeks</option>
-                               <option value="10 weeks">10 weeks</option>
-                               <option value="12 weeks">12 weeks</option>
-                               <option value="13 weeks">13 weeks</option>
+                               {refillReminderOptions.filter(opt => opt.isActive).map(option => (
+                                 <option key={option._id} value={option.name}>{option.name}</option>
+                               ))}
+                               <option value="None">None</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-medium text-gray-500 mb-1">Medication</label>
+                              <select
+                                value={clinicalMedication}
+                                onChange={(e) => setClinicalMedication(e.target.value)}
+                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                               <option value="">Select medication</option>
+                               {medicationOptions.filter(opt => opt.isActive).map(option => (
+                                 <option key={option._id} value={option.name}>{option.name}</option>
+                               ))}
+                               <option value="None">None</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-medium text-gray-500 mb-1">Treatment</label>
+                              <select
+                                value={clinicalTreatment}
+                                onChange={(e) => setClinicalTreatment(e.target.value)}
+                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                               <option value="">Select treatment</option>
+                               {treatmentOptions.filter(opt => opt.isActive).map(option => (
+                                 <option key={option._id} value={option.name}>{option.name}</option>
+                               ))}
                                <option value="None">None</option>
                               </select>
                             </div>
@@ -2255,7 +2293,12 @@ export default function PatientDetailPage() {
                                     await fetch(`/api/survey/responses/${viewingSubmission._id}`, {
                                       method: "PUT",
                                       headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ followUp, refillReminder }),
+                                      body: JSON.stringify({
+                                        followUp,
+                                        refillReminder,
+                                        clinicalMedication,
+                                        clinicalTreatment
+                                      }),
                                     });
                                     fetchSurveySubmissions(user._id);
                                     alert("Clinical details updated!");

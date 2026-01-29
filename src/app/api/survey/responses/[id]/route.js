@@ -34,6 +34,8 @@ export async function PUT(request, { params }) {
     if (body.assignedDoctor !== undefined) updateData.assignedDoctor = body.assignedDoctor;
     if (body.followUp !== undefined) updateData.followUp = body.followUp;
     if (body.refillReminder !== undefined) updateData.refillReminder = body.refillReminder;
+    if (body.clinicalMedication !== undefined) updateData.clinicalMedication = body.clinicalMedication;
+    if (body.clinicalTreatment !== undefined) updateData.clinicalTreatment = body.clinicalTreatment;
     if (body.providerNote !== undefined) updateData.providerNote = body.providerNote;
 
 
