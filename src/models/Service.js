@@ -12,6 +12,10 @@ const ServiceSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide an image'],
   },
+  color: {
+    type: String,
+    default: '#3B82F6', // Default blue color
+  },
   order: {
     type: Number,
     default: 0,

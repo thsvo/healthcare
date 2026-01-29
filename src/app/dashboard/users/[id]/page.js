@@ -126,6 +126,9 @@ export default function PatientDetailPage() {
     notes: "",
   });
 
+  // Services state for color mapping
+  const [services, setServices] = useState([]);
+
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
@@ -232,7 +235,7 @@ export default function PatientDetailPage() {
       fetchSurveySubmissions(userData.data._id);
 
       // Fetch other data in parallel
-      const [categoriesRes, questionsRes, notesRes, doctorsRes, meRes, docCatsRes, medicationOptionsRes, treatmentOptionsRes] = await Promise.all([
+      const [categoriesRes, questionsRes, notesRes, doctorsRes, meRes, docCatsRes, medicationOptionsRes, treatmentOptionsRes, servicesRes] = await Promise.all([
         fetch("/api/categories"),
         fetch("/api/survey/questions"),
         fetch(`/api/users/${params.id}/notes`),
@@ -241,6 +244,7 @@ export default function PatientDetailPage() {
         fetch("/api/document-categories"),
         fetch("/api/medication-options"),
         fetch("/api/treatment-options"),
+        fetch("/api/services"),
       ]);
 
       const categoriesData = await categoriesRes.json();
@@ -250,6 +254,7 @@ export default function PatientDetailPage() {
       const docCatsData = await docCatsRes.json();
       const medicationOptionsData = await medicationOptionsRes.json();
       const treatmentOptionsData = await treatmentOptionsRes.json();
+      const servicesData = await servicesRes.json();
 
       if (categoriesData.success) setCategories(categoriesData.data);
       if (questionsData.success) setQuestions(questionsData.data);
@@ -258,6 +263,7 @@ export default function PatientDetailPage() {
       if (docCatsData.success) setDocumentCategories(docCatsData.data);
       if (medicationOptionsData.success) setMedicationOptions(medicationOptionsData.data);
       if (treatmentOptionsData.success) setTreatmentOptions(treatmentOptionsData.data);
+      if (servicesData.success) setServices(servicesData.data);
       
       try {
         const currentUserData = await meRes.json();
@@ -862,6 +868,12 @@ export default function PatientDetailPage() {
     return age;
   };
 
+  const getServiceColor = (serviceId) => {
+    if (!serviceId) return '#3B82F6'; // Default blue
+    const service = services.find(s => s._id === serviceId);
+    return service?.color || '#3B82F6';
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -1424,14 +1436,13 @@ export default function PatientDetailPage() {
             </h3>
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {/* Survey Submissions */}
-              {surveySubmissions.map((submission) => (
-                <div 
-                  key={submission._id} 
-                  className={`border-l-2 pl-3 py-1 group cursor-pointer rounded-r-lg transition-colors ${
-                    submission.status === 'reviewed' ? 'border-green-400 hover:bg-green-50' :
-                    submission.status === 'archived' ? 'border-red-300 hover:bg-red-50' :
-                    'border-purple-300 hover:bg-purple-50'
-                  }`}
+              {surveySubmissions.map((submission) => {
+                const serviceColor = getServiceColor(submission.serviceId?._id);
+                return (
+                <div
+                  key={submission._id}
+                  className="border-l-4 pl-3 py-1 group cursor-pointer rounded-r-lg transition-colors hover:bg-gray-50"
+                  style={{ borderLeftColor: serviceColor }}
                   onClick={() => {
                     setViewingSubmission(submission);
                     setSelectedDoctor(submission.assignedDoctor?._id || "");
@@ -1443,9 +1454,15 @@ export default function PatientDetailPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs text-purple-700 font-medium">Survey Submission</span>
+                        <span className="text-xs font-medium" style={{ color: serviceColor }}>Survey Submission</span>
                         {submission.serviceId && (
-                          <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-700">
+                          <span
+                            className="px-2 py-0.5 text-xs font-medium rounded-full"
+                            style={{
+                              backgroundColor: `${serviceColor}20`,
+                              color: serviceColor
+                            }}
+                          >
                             {submission.serviceId.name}
                           </span>
                         )}
@@ -1497,8 +1514,9 @@ export default function PatientDetailPage() {
                     </div>
                   </div>
                 </div>
-              ))}
-              
+                );
+              })}
+
               {/* Notes */}
               {notes.length === 0 && surveySubmissions.length === 0 ? (
                 <p className="text-sm text-gray-500 text-center py-4">No timeline items yet</p>

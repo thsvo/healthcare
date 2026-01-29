@@ -12,6 +12,7 @@ export default function ServicesPage() {
     name: "",
     description: "",
     image: "",
+    color: "#3B82F6",
     order: 0,
     isActive: true,
     isComingSoon: false,
@@ -113,6 +114,7 @@ export default function ServicesPage() {
         name: service.name,
         description: service.description || "",
         image: service.image,
+        color: service.color || "#3B82F6",
         order: service.order || 0,
         isActive: service.isActive,
         isComingSoon: service.isComingSoon || false,
@@ -124,6 +126,7 @@ export default function ServicesPage() {
         name: "",
         description: "",
         image: "",
+        color: "#3B82F6",
         order: services.length,
         isActive: true,
         isComingSoon: false,
@@ -210,6 +213,12 @@ export default function ServicesPage() {
               key={service._id}
               className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
             >
+              {/* Color Bar */}
+              <div
+                className="h-2"
+                style={{ backgroundColor: service.color || '#3B82F6' }}
+              />
+
               {/* Image */}
               <div className="relative h-48 bg-gray-100">
                 {service.image ? (
@@ -408,6 +417,40 @@ export default function ServicesPage() {
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
                   placeholder="Brief description of the service..."
                 />
+              </div>
+
+              {/* Color Picker */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Service Color
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={formData.color}
+                    onChange={(e) =>
+                      setFormData({ ...formData, color: e.target.value })
+                    }
+                    className="h-10 w-20 rounded cursor-pointer border border-gray-200"
+                  />
+                  <input
+                    type="text"
+                    value={formData.color}
+                    onChange={(e) =>
+                      setFormData({ ...formData, color: e.target.value })
+                    }
+                    className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-mono text-sm"
+                    placeholder="#3B82F6"
+                    pattern="^#[0-9A-Fa-f]{6}$"
+                  />
+                  <div
+                    className="w-10 h-10 rounded border border-gray-200"
+                    style={{ backgroundColor: formData.color }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  This color will be used for this service throughout the application
+                </p>
               </div>
 
               {/* Order */}
