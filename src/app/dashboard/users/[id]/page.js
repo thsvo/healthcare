@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import RichTextEditor from "@/components/Editor/RichTextEditor";
+import VitalsForm from "@/components/VitalsForm";
 
 
 export default function PatientDetailPage() {
@@ -133,6 +134,26 @@ export default function PatientDetailPage() {
   // Services state for color mapping
   const [services, setServices] = useState([]);
 
+  // Vitals state
+  const [vitalsData, setVitalsData] = useState({
+    weightLbs: '',
+    weightOz: '',
+    heightFt: '',
+    heightIn: '',
+    temperature: '',
+    bmi: '',
+    bloodPressureSystolic: '',
+    bloodPressureDiastolic: '',
+    respiratoryRate: '',
+    pulse: '',
+    bloodSugar: '',
+    fasting: '',
+    o2Saturation: '',
+    notes: '',
+  });
+  const [showVitalsHistory, setShowVitalsHistory] = useState(false);
+  const [vitalsHistory, setVitalsHistory] = useState([]);
+
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
@@ -237,6 +258,7 @@ export default function PatientDetailPage() {
       
       setUser(userData.data);
       fetchSurveySubmissions(userData.data._id);
+      fetchVitals();
 
       // Fetch other data in parallel
       const [categoriesRes, questionsRes, notesRes, doctorsRes, meRes, docCatsRes, medicationOptionsRes, treatmentOptionsRes, followUpOptionsRes, refillReminderOptionsRes, servicesRes] = await Promise.all([
@@ -307,6 +329,83 @@ export default function PatientDetailPage() {
     setNoteContent("");
     setShowNoteDropdown(false);
     setShowNoteModal(true);
+  };
+
+  const fetchVitals = async () => {
+    try {
+      const res = await fetch(`/api/users/${params.id}/vitals`);
+      const data = await res.json();
+
+      if (data.success && data.data) {
+        // Set existing vitals
+        setVitalsData({
+          weightLbs: data.data.weightLbs || '',
+          weightOz: data.data.weightOz || '',
+          heightFt: data.data.heightFt || '',
+          heightIn: data.data.heightIn || '',
+          temperature: data.data.temperature || '',
+          bmi: data.data.bmi || '',
+          bloodPressureSystolic: data.data.bloodPressureSystolic || '',
+          bloodPressureDiastolic: data.data.bloodPressureDiastolic || '',
+          respiratoryRate: data.data.respiratoryRate || '',
+          pulse: data.data.pulse || '',
+          bloodSugar: data.data.bloodSugar || '',
+          fasting: data.data.fasting || '',
+          o2Saturation: data.data.o2Saturation || '',
+          notes: data.data.notes || '',
+        });
+        setVitalsHistory(data.data.changeHistory || []);
+      } else {
+        // Auto-fill from user profile if vitals don't exist
+        if (user?.height) {
+          const heightMatch = user.height.match(/(\d+)'(\d+)"/);
+          if (heightMatch) {
+            setVitalsData(prev => ({
+              ...prev,
+              heightFt: heightMatch[1],
+              heightIn: heightMatch[2],
+            }));
+          }
+        }
+        if (user?.weight) {
+          const weightMatch = user.weight.match(/(\d+)lbs\s*(\d*)oz?/);
+          if (weightMatch) {
+            setVitalsData(prev => ({
+              ...prev,
+              weightLbs: weightMatch[1],
+              weightOz: weightMatch[2] || '',
+            }));
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch vitals:", error);
+    }
+  };
+
+  const handleSaveVitals = async () => {
+    try {
+      const res = await fetch(`/api/users/${params.id}/vitals`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(vitalsData),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert('Vitals saved successfully!');
+        setShowNoteModal(false);
+        setIsNoteModalExpanded(false);
+        setVitalsHistory(data.data.changeHistory || []);
+
+        // Refresh user data to show updated vitals in profile
+        fetchData();
+      } else {
+        alert('Failed to save vitals: ' + data.error);
+      }
+    } catch (error) {
+      alert('Failed to save vitals: ' + error.message);
+    }
   };
 
   const handleCreateNote = async () => {
@@ -1431,6 +1530,41 @@ export default function PatientDetailPage() {
               ))}
             </div>
           </div>
+
+          {/* Vitals Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-4 py-3 bg-teal-700 text-white flex items-center justify-between">
+              <h3 className="font-semibold flex items-center gap-2">
+                <span>❤️</span>
+                Vitals
+              </h3>
+              {vitalsHistory && vitalsHistory.length > 0 && (
+                <button
+                  onClick={() => setShowVitalsHistory(!showVitalsHistory)}
+                  className="text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition-colors"
+                >
+                  {showVitalsHistory ? 'Hide' : 'Show'} History
+                </button>
+              )}
+            </div>
+            <div className="p-4">
+              <VitalsForm
+                vitalsData={vitalsData}
+                setVitalsData={setVitalsData}
+                vitalsHistory={vitalsHistory}
+                showHistory={showVitalsHistory}
+                setShowHistory={setShowVitalsHistory}
+              />
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={handleSaveVitals}
+                  className="w-full px-4 py-2.5 bg-teal-700 text-white rounded-lg hover:bg-teal-800 transition-colors font-medium"
+                >
+                  Save Vitals
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Right Panel - Timeline, Documents, Status, Actions */}
@@ -1927,7 +2061,7 @@ export default function PatientDetailPage() {
               </div>
             </div>
             
-            <div 
+            <div
               className="p-6 cursor-default"
               onPointerDown={(e) => e.stopPropagation()}
             >
@@ -1942,10 +2076,10 @@ export default function PatientDetailPage() {
                   className="p-4"
                 />
               </div>
-              
+
               <div className="flex gap-3 mt-4">
                 <button
-                  onClick={() => setShowNoteModal(false)}
+                  onClick={() => { setShowNoteModal(false); setIsNoteModalExpanded(false); }}
                   className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium"
                 >
                   Cancel

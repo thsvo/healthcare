@@ -19,6 +19,7 @@ const NoteSchema = new mongoose.Schema({
       'Message',
       'Enter COVID Results',
       'Personal Task',
+      'Vitals',
     ],
     required: true,
   },
