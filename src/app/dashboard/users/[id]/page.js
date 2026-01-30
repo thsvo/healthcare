@@ -7,6 +7,7 @@ import Link from "next/link";
 import RichTextEditor from "@/components/Editor/RichTextEditor";
 import VitalsForm from "@/components/VitalsForm";
 import EditUserModal from "@/components/EditUserModal";
+import Sidebar from "@/components/Sidebar";
 
 
 export default function PatientDetailPage() {
@@ -164,6 +165,7 @@ export default function PatientDetailPage() {
   
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [showSlideMenu, setShowSlideMenu] = useState(false);
 
 
   const handleFileChange = (e) => {
@@ -1071,19 +1073,18 @@ export default function PatientDetailPage() {
   return (
     <div className="space-y-6">
       {/* Patient Header - Compact Redesign */}
-      <div className="bg-gradient-to-r from-teal-700 to-teal-600 rounded-xl p-4 text-white relative shadow-lg">
+      <div className="sticky top-0 z-30 bg-gradient-to-r from-teal-700 to-teal-600 rounded-xl p-4 text-white relative shadow-lg">
          
          {/* Top Row: Back Button & Menu */}
          <div className="flex items-center justify-between mb-2">
-            <Link 
-              href="/dashboard/users" 
-              className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-medium"
+            <button 
+              onClick={() => setShowSlideMenu(true)}
+              className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors p-1"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
               </svg>
-              Back
-            </Link>
+            </button>
 
             <div className="relative">
               <button 
@@ -1230,7 +1231,7 @@ export default function PatientDetailPage() {
                   </button>
                 </div>
               </div>
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-100 max-h-[400px] overflow-y-auto custom-scrollbar">
                 {(expandedCategories[categoryId] 
                   ? answersByCategory[categoryId] 
                   : answersByCategory[categoryId].slice(0, 1)
@@ -1878,14 +1879,7 @@ export default function PatientDetailPage() {
                               {new Date(note.createdAt).toLocaleDateString()} • {note.createdBy?.firstName || 'Admin'}
                             </p>
                           </div>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDeleteNote(note._id); }}
-                            className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity ml-2"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                            </svg>
-                          </button>
+                          {/* Delete button removed */}
                         </div>
                       </div>
                       </div>
@@ -3202,7 +3196,7 @@ export default function PatientDetailPage() {
                   <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-semibold text-gray-900">
-                        Problems Update #{viewingHistoryFor.editHistory.length - index}
+                        Vitals #{viewingHistoryFor.editHistory.length - index}
                       </h4>
                       <span className="text-sm text-gray-600">
                         {new Date(edit.editedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
@@ -3433,6 +3427,30 @@ export default function PatientDetailPage() {
           </div>
         </div>
       )}
+      
+      {/* Slide Menu Drawer */}
+      <AnimatePresence>
+        {showSlideMenu && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSlideMenu(false)}
+              className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+              className="fixed top-0 left-0 bottom-0 z-50 h-screen w-auto"
+            >
+              <Sidebar />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
