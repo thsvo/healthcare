@@ -15,6 +15,10 @@ const TreatmentOptionSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  medicationId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'MedicationOption',
+  },
 }, {
   timestamps: true,
 });

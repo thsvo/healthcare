@@ -167,6 +167,7 @@ export default function ClinicalOptionsPage() {
         description: option.description || "",
         order: option.order || 0,
         isActive: option.isActive,
+        medicationId: option.medicationId || "",
       });
     } else {
       setEditingTreatment(null);
@@ -175,6 +176,7 @@ export default function ClinicalOptionsPage() {
         description: "",
         order: 0,
         isActive: true,
+        medicationId: "",
       });
     }
     setShowTreatmentModal(true);
@@ -188,6 +190,7 @@ export default function ClinicalOptionsPage() {
       description: "",
       order: 0,
       isActive: true,
+      medicationId: "",
     });
   };
 
@@ -572,10 +575,10 @@ export default function ClinicalOptionsPage() {
                     Name
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Description
+                    Parent Medication
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Order
+                    Description
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
@@ -586,16 +589,24 @@ export default function ClinicalOptionsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {treatmentOptions.map((option) => (
+                {treatmentOptions.map((option) => {
+                  const parentMed = medicationOptions.find(m => m._id === option.medicationId);
+                  return (
                   <tr key={option._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {option.name}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
-                      {option.description || "-"}
+                      {parentMed ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                          {parentMed.name}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 italic">None</span>
+                      )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {option.order}
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {option.description || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -623,7 +634,7 @@ export default function ClinicalOptionsPage() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                )})}
                 {treatmentOptions.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500">
@@ -734,6 +745,22 @@ export default function ClinicalOptionsPage() {
               </button>
             </div>
             <form onSubmit={handleTreatmentSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Parent Medication
+                </label>
+                <select
+                  value={treatmentForm.medicationId}
+                  onChange={(e) => setTreatmentForm({ ...treatmentForm, medicationId: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-teal-600 outline-none bg-white"
+                >
+                  <option value="">-- No Parent Medication --</option>
+                  {medicationOptions.map(med => (
+                    <option key={med._id} value={med._id}>{med.name}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Select a medication that includes this treatment option.</p>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Name <span className="text-red-500">*</span>

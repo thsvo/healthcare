@@ -79,6 +79,10 @@ const SurveyResponseSchema = new mongoose.Schema({
       duration: String,
       refills: Number,
       instructions: String,
+      treatmentOption: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'TreatmentOption', 
+      },
       addedBy: {
         name: String,
         role: String,

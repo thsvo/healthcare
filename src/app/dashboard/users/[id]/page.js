@@ -99,6 +99,7 @@ export default function PatientDetailPage() {
     duration: "",
     refills: 0,
     instructions: "",
+    treatmentOption: "",
   });
 
   // History Viewer Modal state
@@ -672,10 +673,14 @@ export default function PatientDetailPage() {
         duration: answer.prescriptionDetails.duration || "",
         refills: answer.prescriptionDetails.refills || 0,
         instructions: answer.prescriptionDetails.instructions || "",
+        treatmentOption: (answer.prescriptionDetails.treatmentOption && typeof answer.prescriptionDetails.treatmentOption === 'object') 
+          ? answer.prescriptionDetails.treatmentOption._id 
+          : (answer.prescriptionDetails.treatmentOption || ""),
       });
     } else {
       setPrescriptionData({
         medication: "",
+        treatmentOption: "",
         dosage: "",
         frequency: "",
         duration: "",
@@ -691,6 +696,7 @@ export default function PatientDetailPage() {
     setPrescriptionAnswer(null);
     setPrescriptionData({
       medication: "",
+      treatmentOption: "",
       dosage: "",
       frequency: "",
       duration: "",
@@ -700,8 +706,8 @@ export default function PatientDetailPage() {
   };
 
   const handleAddPrescription = async () => {
-    if (!prescriptionData.medication.trim()) {
-      alert("Medication name is required");
+    if (!prescriptionData.medication) {
+      alert("Medication is required");
       return;
     }
 
@@ -2409,12 +2415,23 @@ export default function PatientDetailPage() {
                               <select
                                 value={clinicalTreatment}
                                 onChange={(e) => setClinicalTreatment(e.target.value)}
-                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
+                                disabled={!clinicalMedication || clinicalMedication === 'None'}
                               >
                                <option value="">Select treatment</option>
-                               {treatmentOptions.filter(opt => opt.isActive).map(option => (
-                                 <option key={option._id} value={option.name}>{option.name}</option>
-                               ))}
+                               {(() => {
+                                 const selectedMed = medicationOptions.find(m => m.name === clinicalMedication);
+                                 // If "None" or not found (and not empty), show nothing or all? 
+                                 // If "None" is selected for medication, treatment should explicitly handle it.
+                                 // User requirement: "treatment only show parent category subcategory".
+                                 if (!selectedMed) return [];
+
+                                 return treatmentOptions
+                                   .filter(opt => opt.isActive && opt.medicationId === selectedMed._id)
+                                   .map(option => (
+                                     <option key={option._id} value={option.name}>{option.name}</option>
+                                   ));
+                               })()}
                                <option value="None">None</option>
                               </select>
                             </div>
@@ -2551,7 +2568,7 @@ export default function PatientDetailPage() {
 
               </div>
             </div>
-            
+
             {/* Admin Actions Footer - BUTTONS ONLY */}
             <div 
               className="p-4 border-t border-gray-100 bg-white flex justify-end gap-3"
@@ -2759,15 +2776,45 @@ export default function PatientDetailPage() {
             <form onSubmit={(e) => { e.preventDefault(); handleAddPrescription(); }} className="p-6 overflow-y-auto space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Medication Name <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Medication <span className="text-red-500">*</span></label>
+                  <select
                     value={prescriptionData.medication}
-                    onChange={(e) => setPrescriptionData({...prescriptionData, medication: e.target.value})}
+                    onChange={(e) => {
+                      setPrescriptionData({
+                        ...prescriptionData, 
+                        medication: e.target.value,
+                        treatmentOption: "" // Reset treatment when medication changes
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none"
-                    placeholder="e.g., Amoxicillin"
                     required
-                  />
+                  >
+                    <option value="">Select Medication</option>
+                    {medicationOptions.filter(m => m.isActive).map(med => (
+                      <option key={med._id} value={med.name}>{med.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Treatment Option</label>
+                  <select
+                    value={prescriptionData.treatmentOption}
+                    onChange={(e) => setPrescriptionData({...prescriptionData, treatmentOption: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none disabled:bg-gray-100 disabled:text-gray-400"
+                    disabled={!prescriptionData.medication}
+                  >
+                    <option value="">Select Treatment</option>
+                    {(() => {
+                      const selectedMed = medicationOptions.find(m => m.name === prescriptionData.medication);
+                      if (!selectedMed) return null;
+                      
+                      return treatmentOptions
+                        .filter(t => t.isActive && t.medicationId === selectedMed._id)
+                        .map(treat => (
+                          <option key={treat._id} value={treat._id}>{treat.name}</option>
+                        ));
+                    })()}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Dosage</label>
