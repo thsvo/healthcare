@@ -2106,13 +2106,13 @@ export default function PatientDetailPage() {
       <AnimatePresence>
         {viewingNote && (
           <motion.div
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             drag={!isViewNoteExpanded}
             dragMomentum={false}
-            className={isViewNoteExpanded ? "fixed inset-0 z-50 bg-white flex flex-col" : "fixed top-24 right-6 w-full max-w-lg bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[80vh] overflow-hidden"}
+            className={isViewNoteExpanded ? "fixed inset-0 z-50 bg-white flex flex-col" : "fixed inset-0 m-auto w-full max-w-lg bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[80vh] overflow-hidden !h-fit"}
             style={{ cursor: "default" }}
           >
             <div 
@@ -2197,13 +2197,13 @@ export default function PatientDetailPage() {
       <AnimatePresence>
         {viewingSubmission && (
           <motion.div
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             drag={!isSubmissionExpanded}
             dragMomentum={false}
-            className={isSubmissionExpanded ? "fixed inset-0 z-50 bg-white flex flex-col" : "fixed top-24 right-6 w-full max-w-3xl bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[90vh] overflow-hidden"}
+            className={isSubmissionExpanded ? "fixed inset-0 z-50 bg-white flex flex-col" : "fixed inset-0 m-auto w-full max-w-3xl bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col max-h-[90vh] overflow-hidden !h-fit"}
             style={{ cursor: "default" }}
           >
             <div 
