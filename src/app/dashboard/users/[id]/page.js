@@ -155,6 +155,9 @@ export default function PatientDetailPage() {
   const [showVitalsHistory, setShowVitalsHistory] = useState(false);
   const [vitalsHistory, setVitalsHistory] = useState([]);
 
+  const [isCreateNoteExpanded, setIsCreateNoteExpanded] = useState(false);
+  const [isVitalsExpanded, setIsVitalsExpanded] = useState(false);
+
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
@@ -1127,20 +1130,20 @@ export default function PatientDetailPage() {
             return (catA?.order || 0) - (catB?.order || 0);
           }).map((categoryId) => (
             <div key={categoryId} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-teal-600">
+              <div className="px-4 py-3 bg-teal-700 text-white border-b border-gray-100 flex items-center justify-between">
+                <h3 className="font-semibold text-white flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-white">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
                   </svg>
                   {getCategoryName(categoryId)}
                 </h3>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                  <span className="text-xs text-white/80 bg-white/20 px-2 py-1 rounded-full">
                     {answersByCategory[categoryId].length} items
                   </span>
                   <button 
                     onClick={() => toggleCategory(categoryId)}
-                    className="text-teal-600 hover:text-teal-700 transition-colors p-1"
+                    className="text-white hover:text-white/80 transition-colors p-1"
                     title={expandedCategories[categoryId] ? 'Collapse' : 'Expand'}
                   >
                     <svg 
@@ -1156,7 +1159,7 @@ export default function PatientDetailPage() {
                   </button>
                   <button
                     onClick={() => openAddModal(categoryId)}
-                    className="text-primary hover:text-primary/80 transition-colors p-1"
+                    className="text-white hover:text-white/80 transition-colors p-1"
                     title="Add Item"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
@@ -1519,12 +1522,28 @@ export default function PatientDetailPage() {
         {/* Middle Panel - Create Note Only */}
         <div className="lg:col-span-1 space-y-4">
            {/* Create Note Section */}
-           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-4 py-3 bg-teal-700 text-white">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-4 py-3 bg-teal-700 text-white flex items-center justify-between">
               <h3 className="font-semibold">Create a new note</h3>
+              <button 
+                onClick={() => setIsCreateNoteExpanded(!isCreateNoteExpanded)}
+                className="text-white/80 hover:text-white transition-colors p-1"
+                title={isCreateNoteExpanded ? 'Collapse' : 'Expand'}
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  strokeWidth={2.5} 
+                  stroke="currentColor" 
+                  className={`w-4 h-4 transition-transform duration-200 ${!isCreateNoteExpanded ? 'rotate-180' : ''}`}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
             </div>
             <div className="divide-y divide-gray-100">
-              {noteTypes.map((noteType) => (
+              {(isCreateNoteExpanded ? noteTypes : noteTypes.slice(0, 1)).map((noteType) => (
                 <button
                   key={noteType.name}
                   onClick={() => openNoteModal(noteType.name)}
@@ -1544,14 +1563,32 @@ export default function PatientDetailPage() {
                 <span>❤️</span>
                 Vitals
               </h3>
-              {vitalsHistory && vitalsHistory.length > 0 && (
-                <button
-                  onClick={() => setShowVitalsHistory(!showVitalsHistory)}
-                  className="text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition-colors"
+              <div className="flex items-center gap-2">
+                {vitalsHistory && vitalsHistory.length > 0 && (
+                  <button
+                    onClick={() => setShowVitalsHistory(!showVitalsHistory)}
+                    className="text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition-colors"
+                  >
+                    {showVitalsHistory ? 'Hide' : 'Show'} History
+                  </button>
+                )}
+                <button 
+                  onClick={() => setIsVitalsExpanded(!isVitalsExpanded)}
+                  className="text-white/80 hover:text-white transition-colors p-1"
+                  title={isVitalsExpanded ? 'Collapse' : 'Expand'}
                 >
-                  {showVitalsHistory ? 'Hide' : 'Show'} History
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    strokeWidth={2.5} 
+                    stroke="currentColor" 
+                    className={`w-4 h-4 transition-transform duration-200 ${!isVitalsExpanded ? 'rotate-180' : ''}`}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                  </svg>
                 </button>
-              )}
+              </div>
             </div>
             <div className="p-4">
               <VitalsForm
@@ -1560,15 +1597,18 @@ export default function PatientDetailPage() {
                 vitalsHistory={vitalsHistory}
                 showHistory={showVitalsHistory}
                 setShowHistory={setShowVitalsHistory}
+                compact={!isVitalsExpanded}
               />
-              <div className="flex gap-3 mt-4">
-                <button
-                  onClick={handleSaveVitals}
-                  className="w-full px-4 py-2.5 bg-teal-700 text-white rounded-lg hover:bg-teal-800 transition-colors font-medium"
-                >
-                  Save Vitals
-                </button>
-              </div>
+              {isVitalsExpanded && (
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={handleSaveVitals}
+                    className="w-full px-4 py-2.5 bg-teal-700 text-white rounded-lg hover:bg-teal-800 transition-colors font-medium"
+                  >
+                    Save Vitals
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
