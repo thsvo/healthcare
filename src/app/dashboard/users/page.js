@@ -208,11 +208,50 @@ export default function UsersPage() {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Follow Up</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Refill Due</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {users.map((user) => (
+              {users.map((user) => {
+                 const getDaysRemaining = (dateString) => {
+                    if (!dateString) return null;
+                    const target = new Date(dateString);
+                    const now = new Date();
+                    const diffTime = target - now;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                    return diffDays;
+                 };
+
+                 const renderDateStatus = (dateString, label) => {
+                    if (!dateString) return <span className="text-gray-400 text-sm">-</span>;
+                    
+                    const days = getDaysRemaining(dateString);
+                    let colorClass = "text-green-600 bg-green-50";
+                    let statusText = `${days} days`;
+
+                    if (days < 0) {
+                        colorClass = "text-red-600 bg-red-50";
+                        statusText = `${Math.abs(days)} days overdue`;
+                    } else if (days <= 3) {
+                        colorClass = "text-orange-600 bg-orange-50";
+                        statusText = `Due in ${days} days`;
+                    } else {
+                        statusText = `In ${days} days`;
+                    }
+
+                    return (
+                        <div className="flex flex-col">
+                            <span className="text-sm font-medium text-gray-900">{new Date(dateString).toLocaleDateString()}</span>
+                            <span className={`text-xs px-2 py-0.5 rounded-full w-fit mt-1 font-medium ${colorClass}`}>
+                                {statusText}
+                            </span>
+                        </div>
+                    );
+                 };
+
+                 return (
                 <tr key={user._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -234,6 +273,12 @@ export default function UsersPage() {
                     <p className="text-sm text-gray-900">{user.phone || '-'}</p>
                     <p className="text-sm text-gray-500">{user.sex} • {user.birthday ? new Date(user.birthday).toLocaleDateString() : 'N/A'}</p>
                   </td>
+                  <td className="px-6 py-4">
+                    {renderDateStatus(user.followUpDate, 'Follow Up')}
+                  </td>
+                  <td className="px-6 py-4">
+                    {renderDateStatus(user.refillReminderDate, 'Refill')}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <Link
                       href={`/dashboard/users/${user._id}`}
@@ -251,7 +296,7 @@ export default function UsersPage() {
                     )}
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         )}

@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import RichTextEditor from "@/components/Editor/RichTextEditor";
 import VitalsForm from "@/components/VitalsForm";
+import EditUserModal from "@/components/EditUserModal";
 
 
 export default function PatientDetailPage() {
@@ -160,6 +161,9 @@ export default function PatientDetailPage() {
   const [isVitalsExpanded, setIsVitalsExpanded] = useState(false);
   const [isDocumentsExpanded, setIsDocumentsExpanded] = useState(false);
   const [isTimelineExpanded, setIsTimelineExpanded] = useState(false);
+  
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
 
 
   const handleFileChange = (e) => {
@@ -607,6 +611,30 @@ export default function PatientDetailPage() {
     setEditAnswerContent("");
   };
 
+  const handleUpdateUser = async (updatedData) => {
+    try {
+      const res = await fetch(`/api/users/${params.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setUser(data.data);
+        setShowEditUserModal(false);
+        // Also refresh vitals in case height/weight changed which affects BMI? 
+        // For now, let's just update user as that's what we edited.
+        alert("Profile updated successfully!");
+      } else {
+        alert("Failed to update profile: " + data.error);
+      }
+    } catch (error) {
+      console.error("Update failed:", error);
+      alert("Failed to update profile");
+    }
+  };
+
   const handleEditSave = async () => {
     if (!editQuestionText.trim()) {
       alert("Question text is required");
@@ -1042,90 +1070,97 @@ export default function PatientDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Back Button */}
-      <div className="sticky top-0 z-20 bg-muted/95 backdrop-blur-sm -mx-6 px-6 pt-4 pb-4 shadow-sm transition-all duration-200">
-        <Link href="/dashboard/users" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-        </svg>
-        Back to Users
-      </Link>
+      {/* Patient Header - Compact Redesign */}
+      <div className="bg-gradient-to-r from-teal-700 to-teal-600 rounded-xl p-4 text-white relative shadow-lg">
+         
+         {/* Top Row: Back Button & Menu */}
+         <div className="flex items-center justify-between mb-2">
+            <Link 
+              href="/dashboard/users" 
+              className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-medium"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+              </svg>
+              Back
+            </Link>
 
-      {/* Patient Header - EHR Style */}
-      <div className="bg-gradient-to-r from-teal-700 to-teal-600 rounded-xl p-6 text-white">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold">
+            <div className="relative">
+              <button 
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+                </svg>
+              </button>
+              
+              {showUserMenu && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
+                  <button
+                    onClick={() => { setShowEditUserModal(true); setShowUserMenu(false); }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-400">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                    </svg>
+                    Edit Profile
+                  </button>
+                  <button
+                    onClick={() => { handleResendCredentials(); setShowUserMenu(false); }}
+                    disabled={resending}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-400">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                    </svg>
+                    {resending ? "Sending..." : "Resend Credentials"}
+                  </button>
+                </div>
+              )}
+            </div>
+         </div>
+
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6">
+            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold flex-shrink-0">
               {user.firstName?.charAt(0) || user.email?.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <h1 className="text-2xl font-bold flex items-center gap-2">
-                {user.firstName} {user.lastName}
-                {user.patientId && (
-                  <span className="text-white/60 font-mono text-lg font-normal">#{user.patientId}</span>
-                )}
-              </h1>
-              <p className="text-white/80 text-sm mt-1">
-                Registered: {new Date(user.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleResendCredentials}
-            disabled={resending}
-            className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium disabled:opacity-50"
-          >
-            {resending ? "Sending..." : "Resend Credentials"}
-          </button>
-        </div>
+            
+            <div className="flex-1 w-full text-center md:text-left">
+               <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 mb-4 md:mb-2">
+                 <h1 className="text-2xl font-bold">
+                    {user.firstName} {user.lastName}
+                 </h1>
+                 {user.patientId && (
+                    <span className="text-white/70 font-mono text-sm bg-white/10 px-2 py-0.5 rounded">#{user.patientId}</span>
+                 )}
+               </div>
 
-        {/* Contact Info Bar */}
-        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div>
-            <span className="text-white/60 block">Email</span>
-            <span className="font-medium">{user.email}</span>
-          </div>
-          <div>
-            <span className="text-white/60 block">Phone</span>
-            <span className="font-medium">{user.phone || '-'}</span>
-          </div>
-          <div>
-            <span className="text-white/60 block">Company</span>
-            <span className="font-medium">{user.company || '-'}</span>
-          </div>
-          <div>
-            <span className="text-white/60 block">Sex</span>
-            <span className="font-medium">{user.sex || '-'}</span>
-          </div>
-          <div>
-            <span className="text-white/60 block">Height/Weight</span>
-            <span className="font-medium">
-              {user.height || '-'}/{user.weight || '-'}
-            </span>
-          </div>
-          <div>
-            <span className="text-white/60 block">Birthday</span>
-            <span className="font-medium">
-              {user.birthday ? (
-                <>
-                  {new Date(user.birthday).toLocaleDateString()}
-                  <span className="opacity-75 ml-1">({calculateAge(user.birthday)} yrs)</span>
-                </>
-              ) : '-'}
-            </span>
-          </div>
-          <div>
-            <span className="text-white/60 block">Location</span>
-            <span className="font-medium">{user.city}, {user.state}</span>
-          </div>
-          <div className="col-span-2 md:col-span-1">
-            <span className="text-white/60 block">Address</span>
-            <span className="font-medium truncate block" title={`${user.address || ''} ${user.addressLine2 || ''}`}>
-              {user.address || '-'} {user.addressLine2 || ''}
-            </span>
-          </div>
+               {/* Compact User Details Grid */}
+               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-y-2 gap-x-6 text-sm">
+                  <div>
+                    <span className="text-white/60 text-xs uppercase tracking-wide block mb-0.5">Contact</span>
+                    <div className="font-medium truncate" title={user.email}>{user.email}</div>
+                    <div className="text-white/80 text-xs">{user.phone || '-'}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/60 text-xs uppercase tracking-wide block mb-0.5">Details</span>
+                    <span className="font-medium">{user.sex || '-'}</span> • {new Date().getFullYear() - new Date(user.birthday).getFullYear()} yrs
+                    <div className="text-white/80 text-xs">{user.birthday ? new Date(user.birthday).toLocaleDateString() : '-'}</div>
+                  </div>
+                  <div>
+                    <span className="text-white/60 text-xs uppercase tracking-wide block mb-0.5">Vitals</span>
+                    <span className="font-medium">{user.height || '-'}/{user.weight || '-'}</span>
+                    <div className="text-white/80 text-xs">BMI: {vitalsMetadata?.bmi || '-'}</div>
+                  </div>
+                  <div className="md:col-span-2 lg:col-span-2">
+                    <span className="text-white/60 text-xs uppercase tracking-wide block mb-0.5">Location</span>
+                    <span className="font-medium truncate block">{user.city}, {user.state}</span>
+                    <div className="text-white/80 text-xs truncate max-w-xs" title={user.address}>{user.address || '-'}</div>
+                  </div>
+               </div>
+            </div>
         </div>
-      </div>
       </div>
 
       {/* Main Content - Two Column Layout */}
@@ -1392,6 +1427,96 @@ export default function PatientDetailPage() {
 
         {/* Middle Panel - Create Note Only */}
         <div className="lg:col-span-1 space-y-4 max-h-[calc(100vh)] overflow-y-auto pr-2 custom-scrollbar">
+           
+           {/* Care Plan Status Card */}
+           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-4 py-3 bg-teal-700 text-white flex items-center justify-between">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                  </svg>
+                  Care Plan Status
+                </h3>
+              </div>
+              <div className="p-4 space-y-3">
+                {/* Follow Up */}
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                              <path fillRule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z" clipRule="evenodd" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-gray-900">Next Follow-Up</p>
+                            <p className="text-xs text-gray-500">{user?.followUpDate ? new Date(user.followUpDate).toLocaleDateString() : 'Not scheduled'}</p>
+                        </div>
+                    </div>
+                    <div>
+                         {(() => {
+                            if (!user?.followUpDate) return <span className="text-xs text-gray-400 font-medium">None</span>;
+                            const target = new Date(user.followUpDate);
+                            const now = new Date();
+                            const diffTime = target - now;
+                            const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            
+                            let colorClass = "text-green-600 bg-green-50";
+                            let statusText = `${days} days`;
+
+                            if (days < 0) {
+                                colorClass = "text-red-600 bg-red-50";
+                                statusText = `${Math.abs(days)} days overdue`;
+                            } else if (days <= 3) {
+                                colorClass = "text-orange-600 bg-orange-50";
+                                statusText = `Due in ${days} days`;
+                            } else {
+                                statusText = `In ${days} days`;
+                            }
+                            return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${colorClass}`}>{statusText}</span>;
+                         })()} 
+                    </div>
+                </div>
+
+                {/* Refill */}
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
+                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                                <path fillRule="evenodd" d="M10 2a6 6 0 0 0-6 6c0 1.887.454 3.665 1.257 5.234a.75.75 0 0 1 .044.653C3.52 17.633 1.82 20.25 1.82 20.25a.75.75 0 0 0 .93 1.05c3.219-1.393 5.48-3.09 6.273-4.102A6 6 0 1 0 10 2Zm-1.5 3a.75.75 0 0 1 .75.75v2.24l1.455.772a.75.75 0 1 1-.685 1.346l-1.875-.994a.75.75 0 0 1-.395-.678V5.75a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+                              </svg>
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-gray-900">Refill Due</p>
+                            <p className="text-xs text-gray-500">{user?.refillReminderDate ? new Date(user.refillReminderDate).toLocaleDateString() : 'Not scheduled'}</p>
+                        </div>
+                    </div>
+                    <div>
+                        {(() => {
+                            if (!user?.refillReminderDate) return <span className="text-xs text-gray-400 font-medium">None</span>;
+                            const target = new Date(user.refillReminderDate);
+                            const now = new Date();
+                            const diffTime = target - now;
+                            const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            
+                            let colorClass = "text-green-600 bg-green-50";
+                            let statusText = `${days} days`;
+
+                            if (days < 0) {
+                                colorClass = "text-red-600 bg-red-50";
+                                statusText = `${Math.abs(days)} days overdue`;
+                            } else if (days <= 3) {
+                                colorClass = "text-orange-600 bg-orange-50";
+                                statusText = `Due in ${days} days`;
+                            } else {
+                                statusText = `In ${days} days`;
+                            }
+                            return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${colorClass}`}>{statusText}</span>;
+                         })()}
+                    </div>
+                </div>
+              </div>
+           </div>
+
            {/* Create Note Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-4 py-3 bg-teal-700 text-white flex items-center justify-between">
@@ -2809,6 +2934,14 @@ export default function PatientDetailPage() {
         )}
       </AnimatePresence>
 
+      {/* Edit User Modal */}
+      <EditUserModal 
+        isOpen={showEditUserModal}
+        onClose={() => setShowEditUserModal(false)}
+        user={user}
+        onSave={handleUpdateUser}
+      />
+      
       {/* Edit Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

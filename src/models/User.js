@@ -87,6 +87,13 @@ const UserSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'SurveyResponse',
   },
+  // Care Plan Dates
+  followUpDate: {
+    type: Date,
+  },
+  refillReminderDate: {
+    type: Date,
+  },
   documents: [DocumentSchema],
 }, {
   timestamps: true,

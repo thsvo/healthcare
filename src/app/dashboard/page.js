@@ -1,18 +1,107 @@
 import Link from "next/link";
 
+import dbConnect from "@/lib/db";
+import User from "@/models/User";
+import SurveyResponse from "@/models/SurveyResponse";
+import SurveyQuestion from "@/models/SurveyQuestion";
+
 async function getStats() {
-  // In production, this would fetch from the database
-  // For now, return placeholder data
-  return {
-    totalQuestions: 0,
-    totalSubmissions: 0,
-    newSubmissions: 0,
-    reviewedSubmissions: 0,
-  };
+  await dbConnect();
+
+  try {
+    const [
+      totalQuestions,
+      totalSubmissions,
+      newSubmissions,
+      reviewedSubmissions
+    ] = await Promise.all([
+      SurveyQuestion.countDocuments({}),
+      SurveyResponse.countDocuments({}),
+      SurveyResponse.countDocuments({ status: 'new' }),
+      SurveyResponse.countDocuments({ status: { $in: ['reviewed', 'completed'] } }) // Assuming 'reviewed' or 'completed' meant reviewed
+    ]);
+
+    return {
+      totalQuestions,
+      totalSubmissions,
+      newSubmissions,
+      reviewedSubmissions,
+    };
+  } catch (error) {
+    console.error("Error fetching dashboard stats:", error);
+    return {
+      totalQuestions: 0,
+      totalSubmissions: 0,
+      newSubmissions: 0,
+      reviewedSubmissions: 0,
+    };
+  }
+}
+
+async function getActionItems() {
+  await dbConnect();
+  try {
+    const users = await User.find({
+      $or: [
+        { followUpDate: { $exists: true, $ne: null } },
+        { refillReminderDate: { $exists: true, $ne: null } }
+      ]
+    }).select('firstName lastName email followUpDate refillReminderDate');
+
+    const actions = [];
+    const now = new Date();
+
+    users.forEach(user => {
+      // Process Follow Up
+      if (user.followUpDate) {
+        const date = new Date(user.followUpDate);
+        const diffTime = date - now;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        // Include if overdue or within next 14 days
+        if (diffDays <= 14) {
+           actions.push({
+             type: 'Follow Up',
+             user,
+             date,
+             days: diffDays,
+             isOverdue: diffDays < 0,
+             id: `${user._id}-followup`
+           });
+        }
+      }
+
+      // Process Refill
+      if (user.refillReminderDate) {
+        const date = new Date(user.refillReminderDate);
+        const diffTime = date - now;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays <= 14) {
+           actions.push({
+             type: 'Refill',
+             user,
+             date,
+             days: diffDays,
+             isOverdue: diffDays < 0,
+             id: `${user._id}-refill`
+           });
+        }
+      }
+    });
+
+    // Sort by urgency (most overdue first, then nearest future)
+    return actions.sort((a, b) => a.days - b.days);
+
+  } catch (error) {
+    console.error("Error fetching action items:", error);
+    return [];
+  }
 }
 
 export default async function DashboardPage() {
   const stats = await getStats();
+  const actionItems = await getActionItems();
 
   const statCards = [
     {
@@ -68,6 +157,45 @@ export default async function DashboardPage() {
         <h2 className="text-2xl font-bold text-secondary">Welcome back!</h2>
         <p className="text-gray-600 mt-1">Here's what's happening with your surveys.</p>
       </div>
+
+      {/* Action Center - Notification Hub */}
+      {actionItems.length > 0 && (
+         <div className="bg-white rounded-xl shadow-sm border border-orange-100 overflow-hidden">
+            <div className="px-6 py-4 bg-orange-50 border-b border-orange-100 flex items-center gap-2">
+                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-orange-600">
+                  <path fillRule="evenodd" d="M5.25 9a6.75 6.75 0 0 1 13.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 0 1-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 1 1-7.48 0 24.585 24.585 0 0 1-4.831-1.244.75.75 0 0 1-.298-1.205A8.217 8.217 0 0 0 5.25 9.75V9Zm4.502 8.9a2.25 2.25 0 1 0 4.496 0 25.057 25.057 0 0 1-4.496 0Z" clipRule="evenodd" />
+                </svg>
+                <h3 className="font-semibold text-orange-900">Action Center ({actionItems.length} Tasks)</h3>
+            </div>
+            <div className="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+                {actionItems.map(item => (
+                    <div key={item.id} className="p-4 hover:bg-gray-50 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${item.isOverdue ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'}`}>
+                                {item.days < 0 ? '!' : item.days}d
+                            </div>
+                            <div>
+                                <p className="font-medium text-gray-900">{item.user.firstName} {item.user.lastName}</p>
+                                <p className="text-sm text-gray-500 flex items-center gap-1">
+                                    {item.type === 'Follow Up' ? '🩺 Follow Up' : '💊 Refill'} 
+                                    <span>•</span>
+                                    <span className={item.isOverdue ? 'text-red-600 font-medium' : 'text-gray-500'}>
+                                        {item.isOverdue ? `Overdue by ${Math.abs(item.days)} days` : `Due in ${item.days} days`}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        <Link 
+                            href={`/dashboard/users/${item.user._id}`}
+                            className="text-sm px-3 py-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 font-medium"
+                        >
+                            View Patient
+                        </Link>
+                    </div>
+                ))}
+            </div>
+         </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

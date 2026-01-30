@@ -80,13 +80,55 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ success: false, error: "Response not found" }, { status: 404 });
     }
 
-    // Sync assignedDoctor to User if it was updated
-    if (body.assignedDoctor !== undefined && response.userId) {
+    // Sync assignedDoctor and Calculate/Sync Dates to User
+    if (response.userId) {
       const User = (await import("@/models/User")).default;
-      await User.findByIdAndUpdate(
-        response.userId,
-        { assignedDoctorId: body.assignedDoctor }
-      );
+      const userUpdate = {};
+      
+      if (body.assignedDoctor !== undefined) {
+        userUpdate.assignedDoctorId = body.assignedDoctor;
+      }
+
+      // Helper to calculate date from duration string
+      const calculateDate = (duration) => {
+        if (!duration || duration === 'None') return null;
+        
+        const now = new Date();
+        const num = parseInt(duration) || 1; // Default to 1 if just "Day" etc
+        
+        if (duration.toLowerCase().includes('day')) {
+          now.setDate(now.getDate() + num);
+        } else if (duration.toLowerCase().includes('week')) {
+          now.setDate(now.getDate() + (num * 7));
+        } else if (duration.toLowerCase().includes('month')) {
+          now.setMonth(now.getMonth() + num);
+        } else if (duration.toLowerCase().includes('year')) {
+          now.setFullYear(now.getFullYear() + num);
+        }
+        
+        return now;
+      };
+
+      if (body.followUp !== undefined) {
+        // If followUp is "None" or empty, we might want to clear it, or keep existing?
+        // User asked for calculation. If they change it to "1 Week", calculate.
+        if (body.followUp && body.followUp !== 'None') {
+           userUpdate.followUpDate = calculateDate(body.followUp);
+        } else {
+           // If Explicitly set to None, maybe clear it?
+           // userUpdate.followUpDate = null; 
+        }
+      }
+
+      if (body.refillReminder !== undefined) {
+         if (body.refillReminder && body.refillReminder !== 'None') {
+            userUpdate.refillReminderDate = calculateDate(body.refillReminder);
+         }
+      }
+
+      if (Object.keys(userUpdate).length > 0) {
+        await User.findByIdAndUpdate(response.userId, userUpdate);
+      }
     }
     
     return NextResponse.json({ success: true, data: response });
