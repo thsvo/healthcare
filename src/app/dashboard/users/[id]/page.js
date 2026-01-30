@@ -346,6 +346,8 @@ export default function PatientDetailPage() {
 
       if (data.success && data.data) {
         // Set existing vitals
+        // Don't populate form inputs - kept blank for new entry
+        /*
         setVitalsData({
           weightLbs: data.data.weightLbs || '',
           weightOz: data.data.weightOz || '',
@@ -362,6 +364,7 @@ export default function PatientDetailPage() {
           o2Saturation: data.data.o2Saturation || '',
           notes: data.data.notes || '',
         });
+        */
         setVitalsHistory(data.data.changeHistory || []);
         setVitalsMetadata(data.data);
       } else {
@@ -408,7 +411,7 @@ export default function PatientDetailPage() {
         setVitalsHistory(data.data.changeHistory || []);
         setVitalsMetadata(data.data);
 
-        // Reset inputs
+        // Reset inputs to blank after successful save
         setVitalsData({
           weightLbs: '',
           weightOz: '',
@@ -426,7 +429,7 @@ export default function PatientDetailPage() {
           notes: '',
         });
 
-        // Refresh user data (for header stats) but don't re-populate form
+        // Refresh user data (for header stats) 
         fetchData(true);
       } else {
         alert('Failed to save vitals: ' + data.error);
@@ -1503,36 +1506,39 @@ export default function PatientDetailPage() {
                                     });
                                   }
                                 });
+                                // Sort groups descending (Newest first)
+                                groups.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                                // Reconstruct state logic
+                                let currentState = { ...vitalsMetadata };
+                                const historyWithSnapshots = groups.map(group => {
+                                  // The state at the end of this edit is the current running state
+                                  const snapshot = { ...currentState };
+
+                                  // Revert changes for the next (older) iteration
+                                  group.changes.forEach(change => {
+                                    // If we have an oldValue, revert to it. 
+                                    // If oldValue is empty string, it means it was empty before.
+                                    currentState[change.field] = change.oldValue;
+                                  });
+
+                                  return { ...group, snapshot };
+                                });
 
                                 // Format each group into an HTML snapshot
-                                const formattedHistory = groups.map(group => {
-                                  // Map generic field names to Display Labels
-                                  const fieldMap = {
-                                    weightLbs: 'WT', weightOz: 'WT',
-                                    heightFt: 'HT', heightIn: 'HT',
-                                    bmi: 'BMI',
-                                    bloodPressureSystolic: 'BP Sys', bloodPressureDiastolic: 'BP Dys',
-                                    pulse: 'HR',
-                                    respiratoryRate: 'RR',
-                                    o2Saturation: 'O2 Sat',
-                                    bloodSugar: 'Blood Sugar', fasting: 'Fasting'
-                                  };
-
-                                  // Consolidate values for display
-                                  const values = {};
-                                  group.changes.forEach(c => {
-                                    values[c.field] = c.newValue;
-                                  });
+                                const formattedHistory = historyWithSnapshots.map(group => {
+                                  // Use the reconstructed snapshot values
+                                  const values = group.snapshot;
 
                                   let displayHtml = '<div class="font-mono text-sm space-y-1">';
                                   
                                   // Weight
-                                  if (values.weightLbs !== undefined || values.weightOz !== undefined) {
+                                  if (values.weightLbs || values.weightOz) {
                                     displayHtml += `<div><span class="font-bold">WT:</span> ${values.weightLbs || ''} lbs ${values.weightOz || ''} oz</div>`;
                                   }
                                   
                                   // Height
-                                  if (values.heightFt !== undefined || values.heightIn !== undefined) {
+                                  if (values.heightFt || values.heightIn) {
                                     displayHtml += `<div><span class="font-bold">HT:</span> ${values.heightFt || ''}' ${values.heightIn || ''}"</div>`;
                                   }
 
@@ -1557,6 +1563,9 @@ export default function PatientDetailPage() {
                                   if (values.bloodSugar || values.fasting) {
                                     displayHtml += `<div><span class="font-bold">Blood Sugar:</span> ${values.bloodSugar || '-'} <span class="font-bold ml-2">Fasting:</span> ${values.fasting || '-'}</div>`;
                                   }
+
+                                  // Temperature
+                                  if (values.temperature) displayHtml += `<div><span class="font-bold">Temp:</span> ${values.temperature}</div>`;
                                   
                                   // Notes
                                   if (values.notes) displayHtml += `<div class="mt-2"><span class="font-bold">Notes:</span> ${values.notes}</div>`;
@@ -3056,7 +3065,7 @@ export default function PatientDetailPage() {
             </div>
             <div className="p-6 overflow-y-auto space-y-4">
               {viewingHistoryFor.editHistory && viewingHistoryFor.editHistory.length > 0 ? (
-                [...viewingHistoryFor.editHistory].reverse().map((edit, index) => (
+                [...viewingHistoryFor.editHistory].map((edit, index) => (
                   <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-semibold text-gray-900">

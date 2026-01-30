@@ -1,6 +1,34 @@
 "use client";
+import { useEffect } from "react";
 
 export default function VitalsForm({ vitalsData, setVitalsData, vitalsHistory, showHistory, setShowHistory, compact = false }) {
+  // Auto-calculate BMI
+  useEffect(() => {
+    const calculateBMI = () => {
+      const lbs = parseFloat(vitalsData.weightLbs) || 0;
+      const oz = parseFloat(vitalsData.weightOz) || 0;
+      const ft = parseFloat(vitalsData.heightFt) || 0;
+      const inches = parseFloat(vitalsData.heightIn) || 0;
+
+      const totalLbs = lbs + (oz / 16);
+      const totalInches = (ft * 12) + inches;
+
+      if (totalLbs > 0 && totalInches > 0) {
+        // Formula: (Weight (lbs) * 703) / (Height (inches)^2)
+        const bmiValue = (totalLbs * 703) / (totalInches * totalInches);
+        // Round to 1 decimal place
+        const roundedBMI = Math.round(bmiValue * 10) / 10;
+        
+        // Only update if value changed to avoid infinite loops (though strict equality check handles this usually)
+        if (vitalsData.bmi !== roundedBMI.toString()) {
+           setVitalsData(prev => ({ ...prev, bmi: roundedBMI.toString() }));
+        }
+      }
+    };
+
+    calculateBMI();
+  }, [vitalsData.weightLbs, vitalsData.weightOz, vitalsData.heightFt, vitalsData.heightIn, setVitalsData]);
+
   const handleChange = (field, value) => {
     setVitalsData(prev => ({
       ...prev,
