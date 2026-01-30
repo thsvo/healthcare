@@ -188,54 +188,6 @@ export default function VitalsForm({ vitalsData, setVitalsData, vitalsHistory, s
             />
           </div>
 
-          {/* Show History Button */}
-          {vitalsHistory && vitalsHistory.length > 0 && (
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => setShowHistory(!showHistory)}
-                className="text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
-              >
-                {showHistory ? (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                    </svg>
-                    Hide Change History
-                  </>
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                    </svg>
-                    View Change History ({vitalsHistory.length} changes)
-                  </>
-                )}
-              </button>
-
-              {showHistory && (
-                <div className="mt-3 space-y-2 max-h-60 overflow-y-auto">
-                  {vitalsHistory.map((change, index) => (
-                    <div key={index} className="p-3 bg-gray-50 rounded-lg text-sm">
-                      <div className="font-medium text-gray-900">
-                        {change.field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                      </div>
-                      <div className="text-gray-600 mt-1">
-                        <span className="line-through">{change.oldValue || '(empty)'}</span>
-                        {' → '}
-                        <span className="font-medium">{change.newValue || '(empty)'}</span>
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        Changed by {change.changedBy?.firstName} {change.changedBy?.lastName} ({change.changedBy?.role})
-                        {' on '}
-                        {new Date(change.changedAt).toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </>
       )}
     </div>

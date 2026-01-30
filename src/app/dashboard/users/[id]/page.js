@@ -154,6 +154,7 @@ export default function PatientDetailPage() {
   });
   const [showVitalsHistory, setShowVitalsHistory] = useState(false);
   const [vitalsHistory, setVitalsHistory] = useState([]);
+  const [vitalsMetadata, setVitalsMetadata] = useState(null);
 
   const [isCreateNoteExpanded, setIsCreateNoteExpanded] = useState(false);
   const [isVitalsExpanded, setIsVitalsExpanded] = useState(false);
@@ -359,6 +360,7 @@ export default function PatientDetailPage() {
           notes: data.data.notes || '',
         });
         setVitalsHistory(data.data.changeHistory || []);
+        setVitalsMetadata(data.data);
       } else {
         // Auto-fill from user profile if vitals don't exist
         if (user?.height) {
@@ -401,6 +403,7 @@ export default function PatientDetailPage() {
         setShowNoteModal(false);
         setIsNoteModalExpanded(false);
         setVitalsHistory(data.data.changeHistory || []);
+        setVitalsMetadata(data.data);
 
         // Refresh user data to show updated vitals in profile
         fetchData();
@@ -1564,14 +1567,6 @@ export default function PatientDetailPage() {
                 Vitals
               </h3>
               <div className="flex items-center gap-2">
-                {vitalsHistory && vitalsHistory.length > 0 && (
-                  <button
-                    onClick={() => setShowVitalsHistory(!showVitalsHistory)}
-                    className="text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition-colors"
-                  >
-                    {showVitalsHistory ? 'Hide' : 'Show'} History
-                  </button>
-                )}
                 <button 
                   onClick={() => setIsVitalsExpanded(!isVitalsExpanded)}
                   className="text-white/80 hover:text-white transition-colors p-1"
@@ -1594,20 +1589,53 @@ export default function PatientDetailPage() {
               <VitalsForm
                 vitalsData={vitalsData}
                 setVitalsData={setVitalsData}
-                vitalsHistory={vitalsHistory}
-                showHistory={showVitalsHistory}
-                setShowHistory={setShowVitalsHistory}
                 compact={!isVitalsExpanded}
               />
               {isVitalsExpanded && (
-                <div className="flex gap-3 mt-4">
-                  <button
-                    onClick={handleSaveVitals}
-                    className="w-full px-4 py-2.5 bg-teal-700 text-white rounded-lg hover:bg-teal-800 transition-colors font-medium"
-                  >
-                    Save Vitals
-                  </button>
-                </div>
+                <>
+                  <div className="flex gap-3 mt-4">
+                    <button
+                      onClick={handleSaveVitals}
+                      className="w-full px-4 py-2.5 bg-teal-700 text-white rounded-lg hover:bg-teal-800 transition-colors font-medium"
+                    >
+                      Save Vitals
+                    </button>
+                  </div>
+                  
+                  {/* Vitals Footer Info */}
+                  {vitalsMetadata && (
+                    <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500 space-y-1">
+                      {vitalsMetadata.createdBy && (
+                        <p>
+                          <span className="font-medium">Added by:</span> {vitalsMetadata.createdBy.firstName} {vitalsMetadata.createdBy.lastName} ({vitalsMetadata.createdBy.role}) on {new Date(vitalsMetadata.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                        </p>
+                      )}
+                      {vitalsMetadata.updatedBy && (
+                        <p className="text-teal-700">
+                          <span className="font-medium">Edited by:</span> {vitalsMetadata.updatedBy.firstName} {vitalsMetadata.updatedBy.lastName} on {new Date(vitalsMetadata.updatedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                          {vitalsMetadata.changeHistory?.length > 0 && (
+                            <button
+                              onClick={() => {
+                                setViewingHistoryFor({
+                                  questionText: "Vitals",
+                                  editHistory: vitalsMetadata.changeHistory.map(h => ({
+                                    ...h,
+                                    editedBy: h.changedBy, // Map changedBy to editedBy for generic modal
+                                    editedAt: h.changedAt
+                                  }))
+                                });
+                                setShowHistoryModal(true);
+                              }}
+                              className="ml-2 text-teal-600 hover:text-teal-800 underline font-medium"
+                            >
+                              View History ({vitalsMetadata.changeHistory.length} {vitalsMetadata.changeHistory.length === 1 ? 'edit' : 'edits'})
+                            </button>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -2948,7 +2976,7 @@ export default function PatientDetailPage() {
                   <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-semibold text-gray-900">
-                        Edit #{viewingHistoryFor.editHistory.length - index}
+                        Problems Update #{viewingHistoryFor.editHistory.length - index}
                       </h4>
                       <span className="text-sm text-gray-600">
                         {new Date(edit.editedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
@@ -2961,15 +2989,20 @@ export default function PatientDetailPage() {
                       {edit.previousQuestionText !== edit.newQuestionText && (
                         <div className="bg-white rounded p-3 border border-gray-200">
                           <p className="text-xs font-medium text-gray-500 mb-1">Question:</p>
-                          <p className="text-sm text-red-600 line-through">{edit.previousQuestionText}</p>
-                          <p className="text-sm text-green-600 mt-1">→ {edit.newQuestionText}</p>
+                          <p className="text-sm text-gray-900 break-words whitespace-pre-wrap">{edit.newQuestionText}</p>
                         </div>
                       )}
                       {edit.previousAnswer !== edit.newAnswer && (
                         <div className="bg-white rounded p-3 border border-gray-200">
                           <p className="text-xs font-medium text-gray-500 mb-1">Answer:</p>
-                          <div className="text-sm text-red-600 line-through quill-content" dangerouslySetInnerHTML={{ __html: edit.previousAnswer || 'None' }} />
-                          <div className="text-sm text-green-600 mt-1 quill-content" dangerouslySetInnerHTML={{ __html: edit.newAnswer || 'None' }} />
+                          <div className="text-sm text-gray-900 quill-content break-words" dangerouslySetInnerHTML={{ __html: edit.newAnswer || 'None' }} />
+                        </div>
+                      )}
+                      {/* Generic Field Change Support (for Vitals) */}
+                      {edit.field && (
+                        <div className="bg-white rounded p-3 border border-gray-200">
+                          <p className="text-xs font-medium text-gray-500 mb-1">{edit.field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</p>
+                          <p className="text-sm text-gray-900 break-words">{edit.newValue || '(empty)'}</p>
                         </div>
                       )}
                     </div>
