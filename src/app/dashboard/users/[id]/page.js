@@ -158,6 +158,9 @@ export default function PatientDetailPage() {
 
   const [isCreateNoteExpanded, setIsCreateNoteExpanded] = useState(false);
   const [isVitalsExpanded, setIsVitalsExpanded] = useState(false);
+  const [isDocumentsExpanded, setIsDocumentsExpanded] = useState(false);
+  const [isTimelineExpanded, setIsTimelineExpanded] = useState(false);
+
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -249,7 +252,7 @@ export default function PatientDetailPage() {
     }
   }, [params.id]);
 
-  const fetchData = async () => {
+  const fetchData = async (skipVitals = false) => {
     try {
       // Fetch user first to ensure we catch critical errors
       console.log("Fetching user data...");
@@ -263,7 +266,7 @@ export default function PatientDetailPage() {
       
       setUser(userData.data);
       fetchSurveySubmissions(userData.data._id);
-      fetchVitals();
+      if (!skipVitals) fetchVitals();
 
       // Fetch other data in parallel
       const [categoriesRes, questionsRes, notesRes, doctorsRes, meRes, docCatsRes, medicationOptionsRes, treatmentOptionsRes, followUpOptionsRes, refillReminderOptionsRes, servicesRes] = await Promise.all([
@@ -405,8 +408,26 @@ export default function PatientDetailPage() {
         setVitalsHistory(data.data.changeHistory || []);
         setVitalsMetadata(data.data);
 
-        // Refresh user data to show updated vitals in profile
-        fetchData();
+        // Reset inputs
+        setVitalsData({
+          weightLbs: '',
+          weightOz: '',
+          heightFt: '',
+          heightIn: '',
+          temperature: '',
+          bmi: '',
+          bloodPressureSystolic: '',
+          bloodPressureDiastolic: '',
+          respiratoryRate: '',
+          pulse: '',
+          bloodSugar: '',
+          fasting: '',
+          o2Saturation: '',
+          notes: '',
+        });
+
+        // Refresh user data (for header stats) but don't re-populate form
+        fetchData(true);
       } else {
         alert('Failed to save vitals: ' + data.error);
       }
@@ -1186,7 +1207,7 @@ export default function PatientDetailPage() {
                   <div key={idx} className={`p-4 flex justify-between group relative ${answer.discontinued ? 'bg-red-50 border-l-4 border-l-red-400' : ''}`}>
                     <div className="flex-1 min-w-0 pr-4">
                       {/* Action Buttons - Top Right (Admin & Doctor Only) */}
-                      {(currentUser?.role === 'admin' || currentUser?.role === 'doctor') && !answer.discontinued && (
+                      {(currentUser?.role === 'admin' || currentUser?.role === 'doctor') && !answer.discontinued && !answer.isLocked && (
                         <div className="float-right flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
                           <button
                             onClick={() => openEditModal(answer)}
@@ -1363,167 +1384,11 @@ export default function PatientDetailPage() {
             </div>
           )}
 
-          {/* Medication Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-4">
-            <div className="px-4 py-3 bg-blue-600 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-semibold text-white flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 16a9.065 9.065 0 0 1-6.23-.693L5 15.3m14.8 0 .364 1.456a2.25 2.25 0 0 1-1.516 2.814l-3.553.89c-1.524.381-3.07.381-4.594 0l-3.553-.89a2.25 2.25 0 0 1-1.516-2.814L5 15.3" />
-                </svg>
-                Medication
-              </h3>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-white/80 bg-white/20 px-2 py-1 rounded-full">
-                  {user?.surveyResponseId?.medications?.length || 0} items
-                </span>
-                {(currentUser?.role === 'admin' || currentUser?.role === 'doctor') && (
-                  <button
-                    onClick={openAddMedicationModal}
-                    className="text-white/80 hover:text-white transition-colors p-1"
-                    title="Add Medication"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="divide-y divide-gray-100">
-              {user?.surveyResponseId?.medications && user.surveyResponseId.medications.length > 0 ? (
-                user.surveyResponseId.medications.map((medication, idx) => (
-                  <div key={idx} className={`p-4 ${medication.discontinued ? 'bg-red-50 border-l-4 border-l-red-400' : ''}`}>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        {medication.discontinued && (
-                          <span className="inline-block px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700 rounded mb-2">
-                            DISCONTINUED
-                          </span>
-                        )}
-                        <p className={`font-semibold text-gray-900 mb-2 ${medication.discontinued ? 'line-through' : ''}`}>
-                          {medication.name}
-                        </p>
-                        <div className="text-sm text-gray-600 space-y-1">
-                          {medication.dosage && <p><strong>Dosage:</strong> {medication.dosage}</p>}
-                          {medication.frequency && <p><strong>Frequency:</strong> {medication.frequency}</p>}
-                          {medication.duration && <p><strong>Duration:</strong> {medication.duration}</p>}
-                          {medication.instructions && <p><strong>Instructions:</strong> {medication.instructions}</p>}
-                        </div>
-                        <div className="mt-2 text-xs text-gray-500">
-                          {medication.addedBy && (
-                            <p>Added by {medication.addedBy.name} ({medication.addedBy.role}) on {new Date(medication.addedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</p>
-                          )}
-                          {medication.discontinued && medication.discontinuedBy && (
-                            <p className="text-red-600 font-medium mt-1">
-                              Discontinued by {medication.discontinuedBy.name} - {medication.discontinueReason}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      {(currentUser?.role === 'admin' || currentUser?.role === 'doctor') && (
-                        <button
-                          onClick={() => handleDeleteMedication(medication._id)}
-                          className="text-gray-300 hover:text-red-500 transition-colors ml-4"
-                          title="Delete"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-8 text-center text-sm text-gray-500">
-                  No medications recorded
-                </div>
-              )}
-            </div>
-          </div>
 
-          {/* Treatment Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-4">
-            <div className="px-4 py-3 bg-green-600 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-semibold text-white flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
-                </svg>
-                Treatment
-              </h3>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-white/80 bg-white/20 px-2 py-1 rounded-full">
-                  {user?.surveyResponseId?.treatments?.length || 0} items
-                </span>
-                {(currentUser?.role === 'admin' || currentUser?.role === 'doctor') && (
-                  <button
-                    onClick={openAddTreatmentModal}
-                    className="text-white/80 hover:text-white transition-colors p-1"
-                    title="Add Treatment"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="divide-y divide-gray-100">
-              {user?.surveyResponseId?.treatments && user.surveyResponseId.treatments.length > 0 ? (
-                user.surveyResponseId.treatments.map((treatment, idx) => (
-                  <div key={idx} className={`p-4 ${treatment.discontinued ? 'bg-red-50 border-l-4 border-l-red-400' : ''}`}>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        {treatment.discontinued && (
-                          <span className="inline-block px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700 rounded mb-2">
-                            DISCONTINUED
-                          </span>
-                        )}
-                        <p className={`font-semibold text-gray-900 mb-2 ${treatment.discontinued ? 'line-through' : ''}`}>
-                          {treatment.name}
-                        </p>
-                        <div className="text-sm text-gray-600 space-y-1">
-                          {treatment.description && <p><strong>Description:</strong> {treatment.description}</p>}
-                          {treatment.startDate && <p><strong>Start Date:</strong> {new Date(treatment.startDate).toLocaleDateString()}</p>}
-                          {treatment.endDate && <p><strong>End Date:</strong> {new Date(treatment.endDate).toLocaleDateString()}</p>}
-                          {treatment.notes && <p><strong>Notes:</strong> {treatment.notes}</p>}
-                        </div>
-                        <div className="mt-2 text-xs text-gray-500">
-                          {treatment.addedBy && (
-                            <p>Added by {treatment.addedBy.name} ({treatment.addedBy.role}) on {new Date(treatment.addedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</p>
-                          )}
-                          {treatment.discontinued && treatment.discontinuedBy && (
-                            <p className="text-red-600 font-medium mt-1">
-                              Discontinued by {treatment.discontinuedBy.name} - {treatment.discontinueReason}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      {(currentUser?.role === 'admin' || currentUser?.role === 'doctor') && (
-                        <button
-                          onClick={() => handleDeleteTreatment(treatment._id)}
-                          className="text-gray-300 hover:text-red-500 transition-colors ml-4"
-                          title="Delete"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-8 text-center text-sm text-gray-500">
-                  No treatments recorded
-                </div>
-              )}
-            </div>
-          </div>
         </div>
 
         {/* Middle Panel - Create Note Only */}
-        <div className="lg:col-span-1 space-y-4">
+        <div className="lg:col-span-1 space-y-4 max-h-[calc(100vh)] overflow-y-auto pr-2 custom-scrollbar">
            {/* Create Note Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-4 py-3 bg-teal-700 text-white flex items-center justify-between">
@@ -1616,13 +1481,101 @@ export default function PatientDetailPage() {
                           {vitalsMetadata.changeHistory?.length > 0 && (
                             <button
                               onClick={() => {
+                                // Group changes by timestamp (within 2 seconds) and user
+                                const groups = [];
+                                const history = [...vitalsMetadata.changeHistory].sort((a, b) => new Date(b.changedAt) - new Date(a.changedAt));
+                                
+                                history.forEach(item => {
+                                  const itemTime = new Date(item.changedAt).getTime();
+                                  const existingGroup = groups.find(g => 
+                                    Math.abs(new Date(g.date).getTime() - itemTime) < 2000 && 
+                                    g.user === item.changedBy?._id
+                                  );
+
+                                  if (existingGroup) {
+                                    existingGroup.changes.push(item);
+                                  } else {
+                                    groups.push({
+                                      date: item.changedAt,
+                                      user: item.changedBy?._id,
+                                      userData: item.changedBy,
+                                      changes: [item]
+                                    });
+                                  }
+                                });
+
+                                // Format each group into an HTML snapshot
+                                const formattedHistory = groups.map(group => {
+                                  // Map generic field names to Display Labels
+                                  const fieldMap = {
+                                    weightLbs: 'WT', weightOz: 'WT',
+                                    heightFt: 'HT', heightIn: 'HT',
+                                    bmi: 'BMI',
+                                    bloodPressureSystolic: 'BP Sys', bloodPressureDiastolic: 'BP Dys',
+                                    pulse: 'HR',
+                                    respiratoryRate: 'RR',
+                                    o2Saturation: 'O2 Sat',
+                                    bloodSugar: 'Blood Sugar', fasting: 'Fasting'
+                                  };
+
+                                  // Consolidate values for display
+                                  const values = {};
+                                  group.changes.forEach(c => {
+                                    values[c.field] = c.newValue;
+                                  });
+
+                                  let displayHtml = '<div class="font-mono text-sm space-y-1">';
+                                  
+                                  // Weight
+                                  if (values.weightLbs !== undefined || values.weightOz !== undefined) {
+                                    displayHtml += `<div><span class="font-bold">WT:</span> ${values.weightLbs || ''} lbs ${values.weightOz || ''} oz</div>`;
+                                  }
+                                  
+                                  // Height
+                                  if (values.heightFt !== undefined || values.heightIn !== undefined) {
+                                    displayHtml += `<div><span class="font-bold">HT:</span> ${values.heightFt || ''}' ${values.heightIn || ''}"</div>`;
+                                  }
+
+                                  // BMI
+                                  if (values.bmi) displayHtml += `<div><span class="font-bold">BMI:</span> ${values.bmi}</div>`;
+
+                                  // BP - Combined
+                                  if (values.bloodPressureSystolic || values.bloodPressureDiastolic) {
+                                    displayHtml += `<div><span class="font-bold">BP Sys:</span> ${values.bloodPressureSystolic || '-'} <span class="font-bold ml-2">BP Dys:</span> ${values.bloodPressureDiastolic || '-'}</div>`;
+                                  }
+
+                                  // HR
+                                  if (values.pulse) displayHtml += `<div><span class="font-bold">HR:</span> ${values.pulse}</div>`;
+
+                                  // RR
+                                  if (values.respiratoryRate) displayHtml += `<div><span class="font-bold">RR:</span> ${values.respiratoryRate}</div>`;
+
+                                  // O2
+                                  if (values.o2Saturation) displayHtml += `<div><span class="font-bold">O2 Sat:</span> ${values.o2Saturation}%</div>`;
+
+                                  // Blood Sugar / Fasting
+                                  if (values.bloodSugar || values.fasting) {
+                                    displayHtml += `<div><span class="font-bold">Blood Sugar:</span> ${values.bloodSugar || '-'} <span class="font-bold ml-2">Fasting:</span> ${values.fasting || '-'}</div>`;
+                                  }
+                                  
+                                  // Notes
+                                  if (values.notes) displayHtml += `<div class="mt-2"><span class="font-bold">Notes:</span> ${values.notes}</div>`;
+
+                                  displayHtml += '</div>';
+
+                                  return {
+                                    editedBy: group.userData,
+                                    editedAt: group.date,
+                                    newAnswer: displayHtml,
+                                    previousAnswer: null, // Force "new" view
+                                    newQuestionText: "Vitals Update", // Context title
+                                    previousQuestionText: "Vitals Update" // No diff for title
+                                  };
+                                });
+
                                 setViewingHistoryFor({
                                   questionText: "Vitals",
-                                  editHistory: vitalsMetadata.changeHistory.map(h => ({
-                                    ...h,
-                                    editedBy: h.changedBy, // Map changedBy to editedBy for generic modal
-                                    editedAt: h.changedAt
-                                  }))
+                                  editHistory: formattedHistory
                                 });
                                 setShowHistoryModal(true);
                               }}
@@ -1645,162 +1598,213 @@ export default function PatientDetailPage() {
         <div className="lg:col-span-1 space-y-4 max-h-[calc(100vh)] overflow-y-auto pr-2 custom-scrollbar">
 
           {/* Notes Timeline */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-teal-600">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-              </svg>
-              Timeline
-            </h3>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {/* Survey Submissions */}
-              {surveySubmissions.map((submission) => {
-                const serviceColor = getServiceColor(submission.serviceId?._id);
-                return (
-                <div
-                  key={submission._id}
-                  className="border-l-4 pl-3 py-1 group cursor-pointer rounded-r-lg transition-colors hover:bg-gray-50"
-                  style={{ borderLeftColor: serviceColor }}
-                  onClick={() => {
-                    setViewingSubmission(submission);
-                    setSelectedDoctor(submission.assignedDoctor?._id || "");
-                    setFollowUp(submission.followUp || "");
-                    setRefillReminder(submission.refillReminder || "");
-                    setClinicalMedication(submission.clinicalMedication || "");
-                    setClinicalTreatment(submission.clinicalTreatment || "");
-                    setProviderNote(submission.providerNote || "");
-                  }}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-4 py-3 bg-teal-700 text-white flex items-center justify-between">
+              <h3 className="font-semibold flex items-center gap-2">
+                <span>⏱️</span>
+                Timeline
+              </h3>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setIsTimelineExpanded(!isTimelineExpanded)}
+                  className="text-white/80 hover:text-white transition-colors p-1"
+                  title={isTimelineExpanded ? 'Collapse' : 'Expand'}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-medium" style={{ color: serviceColor }}>Survey Submission</span>
-                        {submission.serviceId && (
-                          <span
-                            className="px-2 py-0.5 text-xs font-medium rounded-full"
-                            style={{
-                              backgroundColor: `${serviceColor}20`,
-                              color: serviceColor
-                            }}
-                          >
-                            {submission.serviceId.name}
-                          </span>
-                        )}
-                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                          submission.status === 'reviewed' ? 'bg-green-100 text-green-700' :
-                          submission.status === 'archived' ? 'bg-red-100 text-red-700' :
-                          'bg-yellow-100 text-yellow-700'
-                        }`}>
-                          {submission.status === 'reviewed' ? 'Approved' : 
-                           submission.status === 'archived' ? 'Rejected' : 
-                           'Pending'}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-900 mt-0.5">
-                        {submission.answers?.length || 0} questions answered
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {new Date(submission.createdAt).toLocaleDateString()}
-                      </p>
-                      {/* Show Provider Note & Follow Ups in Timeline */ }
-                      {(submission.providerNote || submission.followUp || submission.refillReminder) && (
-                        <div className="mt-2 pt-2 border-t border-gray-100 text-xs">
-                          {submission.providerNote && (
-                            <div 
-                              className="quill-content !text-xs italic mb-1"
-                              dangerouslySetInnerHTML={{ __html: submission.providerNote }}
-                            />
-                          )}
-                          <div className="flex gap-3 text-gray-500">
-                            {submission.followUp && (
-                              <span className="flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
-                                  <path fillRule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z" clipRule="evenodd" />
-                                </svg>
-                                Follow-up: {submission.followUp}
-                              </span>
-                            )}
-                            {submission.refillReminder && (
-                              <span className="flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
-                                  <path fillRule="evenodd" d="M10 2a6 6 0 0 0-6 6c0 1.887.454 3.665 1.257 5.234a.75.75 0 0 1 .044.653C3.52 17.633 1.82 20.25 1.82 20.25a.75.75 0 0 0 .93 1.05c3.219-1.393 5.48-3.09 6.273-4.102A6 6 0 1 0 10 2Zm-1.5 3a.75.75 0 0 1 .75.75v2.24l1.455.772a.75.75 0 1 1-.685 1.346l-1.875-.994a.75.75 0 0 1-.395-.678V5.75a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
-                                </svg>
-                                Refill: {submission.refillReminder}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                );
-              })}
-
-              {/* Notes */}
-              {notes.length === 0 && surveySubmissions.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">No timeline items yet</p>
-              ) : (
-                notes.map((note) => (
-                  <div 
-                    key={note._id} 
-                    className="border-l-2 border-teal-200 pl-3 py-1 group cursor-pointer hover:bg-gray-50 rounded-r-lg transition-colors"
-                    onClick={() => setViewingNote(note)}
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    strokeWidth={2.5} 
+                    stroke="currentColor" 
+                    className={`w-4 h-4 transition-transform duration-200 ${!isTimelineExpanded ? 'rotate-180' : ''}`}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-teal-700 font-medium">{note.type}</p>
-                        <div 
-                          className="quill-content !text-sm mt-0.5 truncate"
-                          dangerouslySetInnerHTML={{ __html: note.content }}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                          {new Date(note.createdAt).toLocaleDateString()} • {note.createdBy?.firstName || 'Admin'}
-                        </p>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="p-4 max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
+              <div className="relative pl-4 border-l-2 border-gray-100 space-y-6">
+              {(() => {
+                const combinedTimeline = [
+                  ...surveySubmissions.map(s => ({ ...s, _timelineType: 'submission', _sortDate: new Date(s.createdAt) })),
+                  ...notes.map(n => ({ ...n, _timelineType: 'note', _sortDate: new Date(n.createdAt) }))
+                ].sort((a, b) => b._sortDate - a._sortDate);
+
+                const itemsDislayed = isTimelineExpanded ? combinedTimeline : combinedTimeline.slice(0, 1);
+
+                if (itemsDislayed.length === 0) {
+                   return <p className="text-sm text-gray-500 text-center py-4">No timeline items yet</p>;
+                }
+
+                return itemsDislayed.map(item => {
+                  if (item._timelineType === 'submission') {
+                    const submission = item;
+                    const serviceColor = getServiceColor(submission.serviceId?._id);
+                    return (
+                    <div
+                      key={submission._id}
+                      className="border-l-4 pl-3 py-1 group cursor-pointer rounded-r-lg transition-colors hover:bg-gray-50"
+                      style={{ borderLeftColor: serviceColor }}
+                      onClick={() => {
+                        setViewingSubmission(submission);
+                        setSelectedDoctor(submission.assignedDoctor?._id || "");
+                        setFollowUp(submission.followUp || "");
+                        setRefillReminder(submission.refillReminder || "");
+                        setClinicalMedication(submission.clinicalMedication || "");
+                        setClinicalTreatment(submission.clinicalTreatment || "");
+                        setProviderNote("");
+                      }}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-medium" style={{ color: serviceColor }}>Survey Submission</span>
+                            {submission.serviceId && (
+                              <span
+                                className="px-2 py-0.5 text-xs font-medium rounded-full"
+                                style={{
+                                  backgroundColor: `${serviceColor}20`,
+                                  color: serviceColor
+                                }}
+                              >
+                                {submission.serviceId.name}
+                              </span>
+                            )}
+                            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                              submission.status === 'reviewed' ? 'bg-green-100 text-green-700' :
+                              submission.status === 'archived' ? 'bg-red-100 text-red-700' :
+                              submission.status === 'closed' ? 'bg-gray-100 text-gray-700' :
+                              'bg-yellow-100 text-yellow-700'
+                            }`}>
+                              {submission.status === 'reviewed' ? 'Approved' : 
+                               submission.status === 'archived' ? 'Rejected' : 
+                               submission.status === 'closed' ? 'Finished' :
+                               'Pending'}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-900 mt-0.5">
+                            {submission.answers?.length || 0} questions answered
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(submission.createdAt).toLocaleDateString()}
+                          </p>
+                          {/* Show Provider Note & Follow Ups in Timeline */ }
+                          {(submission.providerNote || submission.followUp || submission.refillReminder) && (
+                            <div className="mt-2 pt-2 border-t border-gray-100 text-xs">
+                              {submission.providerNote && (
+                                <div 
+                                  className="quill-content !text-xs italic mb-1"
+                                  dangerouslySetInnerHTML={{ __html: submission.providerNote }}
+                                />
+                              )}
+                              <div className="flex gap-3 text-gray-500">
+                                {submission.followUp && (
+                                  <span className="flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
+                                      <path fillRule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z" clipRule="evenodd" />
+                                    </svg>
+                                    Follow-up: {submission.followUp}
+                                  </span>
+                                )}
+                                {submission.refillReminder && (
+                                  <span className="flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
+                                      <path fillRule="evenodd" d="M10 2a6 6 0 0 0-6 6c0 1.887.454 3.665 1.257 5.234a.75.75 0 0 1 .044.653C3.52 17.633 1.82 20.25 1.82 20.25a.75.75 0 0 0 .93 1.05c3.219-1.393 5.48-3.09 6.273-4.102A6 6 0 1 0 10 2Zm-1.5 3a.75.75 0 0 1 .75.75v2.24l1.455.772a.75.75 0 1 1-.685 1.346l-1.875-.994a.75.75 0 0 1-.395-.678V5.75a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+                                    </svg>
+                                    Refill: {submission.refillReminder}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleDeleteNote(note._id); }}
-                        className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity ml-2"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                        </svg>
-                      </button>
                     </div>
-                  </div>
-                ))
-              )}
+                    );
+                  } else {
+                    const note = item;
+                    return (
+                      <div 
+                        key={note._id} 
+                        className="relative group"
+                      >
+                        <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-teal-400 ring-4 ring-white group-hover:bg-teal-600 transition-colors"></div>
+                        <div className="bg-gray-50 rounded-lg p-3 hover:bg-teal-50/50 transition-colors border border-gray-100">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs font-semibold text-teal-700 uppercase tracking-wider flex items-center gap-1">
+                              {noteTypes.find(t => t.name === note.type)?.icon} {note.type}
+                            </span>
+                            <div 
+                              className="quill-content !text-sm mt-0.5 truncate"
+                              dangerouslySetInnerHTML={{ __html: note.content }}
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              {new Date(note.createdAt).toLocaleDateString()} • {note.createdBy?.firstName || 'Admin'}
+                            </p>
+                          </div>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteNote(note._id); }}
+                            className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity ml-2"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                      </div>
+                    );
+                  }
+                });
+              })()}
+            </div>
             </div>
           </div>
           
           {/* Documents Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-teal-600">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                </svg>
+            <div className="px-4 py-3 bg-teal-700 text-white flex items-center justify-between">
+              <h3 className="font-semibold flex items-center gap-2">
+                <span>📄</span>
                 Documents
               </h3>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                <span className="text-xs text-white/80 bg-white/20 px-2 py-1 rounded-full">
                   {user.documents?.length || 0} files
                 </span>
                 <button
                   onClick={() => setShowUploadModal(true)}
-                  className="text-xs text-primary font-medium hover:text-primary/80 flex items-center gap-1"
+                  className="text-xs text-white font-medium hover:text-white/80 flex items-center gap-1"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                   </svg>
                   Upload
                 </button>
+                <button 
+                  onClick={() => setIsDocumentsExpanded(!isDocumentsExpanded)}
+                  className="text-white/80 hover:text-white transition-colors p-1"
+                  title={isDocumentsExpanded ? 'Collapse' : 'Expand'}
+                >
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    strokeWidth={2.5} 
+                    stroke="currentColor" 
+                    className={`w-4 h-4 transition-transform duration-200 ${!isDocumentsExpanded ? 'rotate-180' : ''}`}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </button>
               </div>
             </div>
             
-            {user.documents?.length > 0 ? (
-              <div className="p-4 space-y-3">
-                {user.documents.map((doc, idx) => (
+            {(isDocumentsExpanded ? (user.documents || []) : (user.documents || []).slice(0, 1)).length > 0 ? (
+                <div className="p-4 space-y-3">
+                  {(isDocumentsExpanded ? user.documents : user.documents.slice(0, 1)).map((doc, idx) => (
                   <a 
                     key={idx}
                     href={doc.url} 
@@ -1829,12 +1833,13 @@ export default function PatientDetailPage() {
                     </div>
                   </a>
                 ))}
-              </div>
-            ) : (
-              <div className="p-6 text-center text-gray-500 text-sm">
-                No documents uploaded.
-              </div>
-            )}
+                </div>
+              ) : (
+                <div className="p-6 text-center text-gray-500 text-sm">
+                  No documents uploaded.
+                </div>
+              )
+            }
           </div>
 
           {/* Account Status Card */}
@@ -2362,7 +2367,7 @@ export default function PatientDetailPage() {
                         {qa.questionText}
                       </p>
                       <div 
-                        className="quill-content !text-gray-600"
+                        className="quill-content !text-gray-600 break-words"
                         dangerouslySetInnerHTML={{ __html: Array.isArray(qa.answer) ? qa.answer.join(", ") : (qa.answer || '<span class="text-gray-400 italic">No answer</span>') }}
                       />
                     </div>
@@ -2438,7 +2443,8 @@ export default function PatientDetailPage() {
                               <select
                                 value={followUp}
                                 onChange={(e) => setFollowUp(e.target.value)}
-                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                disabled={viewingSubmission.status === 'closed'}
+                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
                               >
                                <option value="">Select interval</option>
                                {followUpOptions.filter(opt => opt.isActive).map(option => (
@@ -2453,7 +2459,8 @@ export default function PatientDetailPage() {
                                <select
                                 value={refillReminder}
                                 onChange={(e) => setRefillReminder(e.target.value)}
-                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                disabled={viewingSubmission.status === 'closed'}
+                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
                               >
                                <option value="">Select interval</option>
                                {refillReminderOptions.filter(opt => opt.isActive).map(option => (
@@ -2468,7 +2475,8 @@ export default function PatientDetailPage() {
                               <select
                                 value={clinicalMedication}
                                 onChange={(e) => setClinicalMedication(e.target.value)}
-                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                disabled={viewingSubmission.status === 'closed'}
+                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
                               >
                                <option value="">Select medication</option>
                                {medicationOptions.filter(opt => opt.isActive).map(option => (
@@ -2484,7 +2492,7 @@ export default function PatientDetailPage() {
                                 value={clinicalTreatment}
                                 onChange={(e) => setClinicalTreatment(e.target.value)}
                                 className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
-                                disabled={!clinicalMedication || clinicalMedication === 'None'}
+                                disabled={(!clinicalMedication || clinicalMedication === 'None') || viewingSubmission.status === 'closed'}
                               >
                                <option value="">Select treatment</option>
                                {(() => {
@@ -2524,8 +2532,8 @@ export default function PatientDetailPage() {
                                   } catch (e) { alert("Failed to update details"); }
                                   setActionLoading(false);
                                 }}
-                                disabled={actionLoading}
-                                className="px-4 py-2 bg-white border border-blue-200 text-blue-700 text-xs font-medium rounded-lg hover:bg-blue-50 transition-colors shadow-sm"
+                                disabled={actionLoading || viewingSubmission.status === 'closed'}
+                                className="px-4 py-2 bg-white border border-blue-200 text-blue-700 text-xs font-medium rounded-lg hover:bg-blue-50 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Update Clinical Details
                             </button>
@@ -2538,7 +2546,7 @@ export default function PatientDetailPage() {
                     <h5 className="text-sm font-semibold text-gray-900 mb-3">Send Message</h5>
                     <div className="space-y-4">
                         <div>
-                        <div className="border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-purple-500 transition-all bg-gray-50">
+                        <div className={`border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-purple-500 transition-all bg-gray-50 ${viewingSubmission.status === 'closed' ? 'opacity-60 pointer-events-none' : ''}`}>
                            <RichTextEditor
                              value={providerNote}
                              onChange={setProviderNote}
@@ -2580,8 +2588,8 @@ export default function PatientDetailPage() {
                                   } catch (e) { alert("Failed to send message"); }
                                   setActionLoading(false);
                                 }}
-                                disabled={actionLoading}
-                                className="px-6 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                                disabled={actionLoading || viewingSubmission.status === 'closed'}
+                                className="px-6 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Send Message
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -2627,7 +2635,8 @@ export default function PatientDetailPage() {
                                 alert("Doctor assigned!");
                             } catch (e) { alert("Failed to assign doctor"); }
                         }}
-                        className="px-4 py-2 text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg text-sm font-medium transition-colors"
+                        disabled={viewingSubmission.status === 'closed'}
+                        className="px-4 py-2 text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Assign
                     </button>
@@ -2639,78 +2648,153 @@ export default function PatientDetailPage() {
 
             {/* Admin Actions Footer - BUTTONS ONLY */}
             <div 
-              className="p-4 border-t border-gray-100 bg-white flex justify-end gap-3"
+              className="p-4 border-t border-gray-100 bg-white flex items-center justify-between gap-3"
               onPointerDown={(e) => e.stopPropagation()}
             >
-              <button
-                onClick={() => { setViewingSubmission(null); setIsSubmissionExpanded(false); }}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-              >
-                Close
-              </button>
+              <div className="flex gap-3">
+                 <button
+                    onClick={async () => {
+                      if (!clinicalMedication) {
+                        alert("Please select a valid medication before finishing the task.");
+                        return;
+                      }
 
-              {viewingSubmission.status !== 'archived' && (
+                      const targetCategory = categories.find(c => c.name === "Current Medication");
+                      if (!targetCategory) {
+                         alert("Category 'Current Medication' not found.");
+                         return;
+                      }
+
+                      if (!confirm("This will add the medication records to 'Current Medication' and complete the task. This action cannot be undone.")) return;
+                      
+                      setActionLoading(true);
+                      try {
+                        const newItem = {
+                          questionText: clinicalMedication,
+                          answer: `${clinicalTreatment}${refillReminder && refillReminder !== 'None' ? `<br/><span class="text-xs text-gray-400">Refills: ${refillReminder}</span>` : ''}`,
+                          categoryId: targetCategory._id,
+                          questionId: null,
+                          addedBy: {
+                            name: `${currentUser.firstName} ${currentUser.lastName}`,
+                            role: currentUser.role,
+                            id: currentUser._id
+                          },
+                          addedAt: new Date(),
+                          isLocked: true 
+                        };
+
+                        const currentAnswers = user.surveyResponseId.answers || [];
+                        const updatedAnswers = [newItem, ...currentAnswers];
+
+                        // Update survey response with new answers AND archived status
+                        await fetch(`/api/survey/responses/${viewingSubmission._id}`, {
+                           method: "PUT",
+                           headers: { "Content-Type": "application/json" },
+                           body: JSON.stringify({ 
+                              status: 'closed', 
+                              answers: updatedAnswers,
+                              // Also save clinical fields
+                              assignedDoctor: selectedDoctor,
+                              followUp,
+                              refillReminder,
+                              clinicalMedication,
+                              clinicalTreatment,
+                              providerNote
+                           }),
+                        });
+                        
+                        alert("Task finished and medication added!");
+                        setViewingSubmission(null);
+                        fetchSurveySubmissions(user._id);
+                        fetchData(); // Refresh user data to see new items
+
+                      } catch (error) {
+                        console.error(error);
+                        alert("Failed to finish task");
+                      }
+                      setActionLoading(false);
+                    }}
+                    disabled={actionLoading || viewingSubmission.status === 'closed'}
+                    className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium text-sm flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                 >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                    Finish Task
+                 </button>
+              </div>
+
+              <div className="flex gap-3">
                 <button
-                  onClick={async () => {
-                    setActionLoading(true);
-                    try {
-                      await fetch(`/api/survey/responses/${viewingSubmission._id}`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ status: 'archived' }),
-                      });
-                      setViewingSubmission(null);
-                      fetchSurveySubmissions(user._id);
-                    } catch (e) { alert("Failed to reject"); }
-                    setActionLoading(false);
-                  }}
-                  disabled={actionLoading}
-                  className="px-4 py-2 text-red-600 border border-red-200 hover:bg-red-50 rounded-lg transition-colors font-medium disabled:opacity-50"
+                  onClick={() => { setViewingSubmission(null); setIsSubmissionExpanded(false); }}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                 >
-                  Reject
+                  Close
                 </button>
-              )}
-              
-              {viewingSubmission.status === 'new' && (
-                <button
-                  onClick={async () => {
-                    setActionLoading(true);
-                    try {
-                      // Update submission status
-                      await fetch(`/api/survey/responses/${viewingSubmission._id}`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ 
-                            status: 'reviewed',
-                            assignedDoctor: selectedDoctor,
-                            followUp,
-                            refillReminder,
-                            providerNote
-                        }),
-                      });
-                      // Update user status if needed
-                      if (user.accountStatus !== 'active') {
-                        await fetch(`/api/users/${user._id}`, {
+
+                {viewingSubmission.status !== 'archived' && (
+                  <button
+                    onClick={async () => {
+                      setActionLoading(true);
+                      try {
+                        await fetch(`/api/survey/responses/${viewingSubmission._id}`, {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ status: 'archived' }),
+                        });
+                        setViewingSubmission(null);
+                        fetchSurveySubmissions(user._id);
+                      } catch (e) { alert("Failed to reject"); }
+                      setActionLoading(false);
+                    }}
+                    disabled={actionLoading}
+                    className="px-4 py-2 text-red-600 border border-red-200 hover:bg-red-50 rounded-lg transition-colors font-medium disabled:opacity-50"
+                  >
+                    Reject
+                  </button>
+                )}
+                
+                {viewingSubmission.status === 'new' && (
+                  <button
+                    onClick={async () => {
+                      setActionLoading(true);
+                      try {
+                        // Update submission status
+                        await fetch(`/api/survey/responses/${viewingSubmission._id}`, {
                           method: "PUT",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({ 
-                            accountStatus: 'active',
-                            ...(selectedDoctor && { assignedDoctorId: selectedDoctor })
+                              status: 'reviewed',
+                              assignedDoctor: selectedDoctor,
+                              followUp,
+                              refillReminder,
+                              providerNote
                           }),
                         });
-                      }
-                      setViewingSubmission(null);
-                      fetchSurveySubmissions(user._id);
-                      fetchData(); // Refresh user data
-                    } catch (e) { alert("Failed to approve"); }
-                    setActionLoading(false);
-                  }}
-                  disabled={actionLoading}
-                  className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium disabled:opacity-50 shadow-sm"
-                >
-                  {actionLoading ? "Processing..." : "Approve"}
-                </button>
-              )}
+                        // Update user status if needed
+                        if (user.accountStatus !== 'active') {
+                          await fetch(`/api/users/${user._id}`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ 
+                              accountStatus: 'active',
+                              ...(selectedDoctor && { assignedDoctorId: selectedDoctor })
+                            }),
+                          });
+                        }
+                        setViewingSubmission(null);
+                        fetchSurveySubmissions(user._id);
+                        fetchData(); // Refresh user data
+                      } catch (e) { alert("Failed to approve"); }
+                      setActionLoading(false);
+                    }}
+                    disabled={actionLoading}
+                    className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium disabled:opacity-50 shadow-sm"
+                  >
+                    {actionLoading ? "Processing..." : "Approve"}
+                  </button>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
