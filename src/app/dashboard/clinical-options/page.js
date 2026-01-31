@@ -36,6 +36,7 @@ export default function ClinicalOptionsPage() {
     description: "",
     order: 0,
     isActive: true,
+    days: 0,
   });
 
   const [showRefillReminderModal, setShowRefillReminderModal] = useState(false);
@@ -45,6 +46,7 @@ export default function ClinicalOptionsPage() {
     description: "",
     order: 0,
     isActive: true,
+    days: 0,
   });
 
   useEffect(() => {
@@ -251,6 +253,7 @@ export default function ClinicalOptionsPage() {
         description: option.description || "",
         order: option.order || 0,
         isActive: option.isActive,
+        days: option.days || 0,
       });
     } else {
       setEditingFollowUp(null);
@@ -259,6 +262,7 @@ export default function ClinicalOptionsPage() {
         description: "",
         order: 0,
         isActive: true,
+        days: 0,
       });
     }
     setShowFollowUpModal(true);
@@ -272,6 +276,7 @@ export default function ClinicalOptionsPage() {
       description: "",
       order: 0,
       isActive: true,
+      days: 0,
     });
   };
 
@@ -332,6 +337,7 @@ export default function ClinicalOptionsPage() {
         description: option.description || "",
         order: option.order || 0,
         isActive: option.isActive,
+        days: option.days || 0,
       });
     } else {
       setEditingRefillReminder(null);
@@ -340,6 +346,7 @@ export default function ClinicalOptionsPage() {
         description: "",
         order: 0,
         isActive: true,
+        days: 0,
       });
     }
     setShowRefillReminderModal(true);
@@ -353,6 +360,7 @@ export default function ClinicalOptionsPage() {
       description: "",
       order: 0,
       isActive: true,
+      days: 0,
     });
   };
 
@@ -842,7 +850,7 @@ export default function ClinicalOptionsPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
+                    Name (Days)
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Description
@@ -930,7 +938,7 @@ export default function ClinicalOptionsPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
+                    Name (Days)
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Description
@@ -1016,35 +1024,34 @@ export default function ClinicalOptionsPage() {
               </button>
             </div>
             <form onSubmit={handleFollowUpSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name <span className="text-red-500">*</span>
-                </label>
+              <div className="hidden">
                 <input
                   type="text"
                   value={followUpForm.name}
-                  onChange={(e) => setFollowUpForm({ ...followUpForm, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-teal-600 outline-none"
-                  required
+                  readOnly
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea
-                  value={followUpForm.description}
-                  onChange={(e) => setFollowUpForm({ ...followUpForm, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-teal-600 outline-none"
-                  rows={3}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Order</label>
-                <input
-                  type="number"
-                  value={followUpForm.order}
-                  onChange={(e) => setFollowUpForm({ ...followUpForm, order: parseInt(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-teal-600 outline-none"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Due In (Days)</label>
+                <select
+                   value={followUpForm.days}
+                   onChange={(e) => {
+                      const d = parseInt(e.target.value) || 0;
+                      setFollowUpForm({ ...followUpForm, days: d, name: d > 0 ? `${d} Days` : "No Date" });
+                   }}
+                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-teal-600 outline-none bg-white"
+                >
+                  <option value="0">No specific date</option>
+                  {[...Array(31)].map((_, i) => (
+                    <option key={i + 1} value={i + 1}>{i + 1} Day{i !== 0 ? 's' : ''}</option>
+                  ))}
+                  {[45, 60, 90, 120, 180, 365].map(d => (
+                     <option key={d} value={d}>{d} Days</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                   Dashboard will automatically set due date to Today + this many days.
+                </p>
               </div>
               <div>
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -1095,18 +1102,7 @@ export default function ClinicalOptionsPage() {
               </button>
             </div>
             <form onSubmit={handleRefillReminderSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={refillReminderForm.name}
-                  onChange={(e) => setRefillReminderForm({ ...refillReminderForm, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-teal-600 outline-none"
-                  required
-                />
-              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
@@ -1124,6 +1120,35 @@ export default function ClinicalOptionsPage() {
                   onChange={(e) => setRefillReminderForm({ ...refillReminderForm, order: parseInt(e.target.value) || 0 })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-teal-600 outline-none"
                 />
+              </div>
+              <div className="hidden">
+                <input
+                  type="text"
+                  value={refillReminderForm.name}
+                  readOnly
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Due In (Days)</label>
+                <select
+                   value={refillReminderForm.days}
+                   onChange={(e) => {
+                      const d = parseInt(e.target.value) || 0;
+                      setRefillReminderForm({ ...refillReminderForm, days: d, name: d > 0 ? `${d} Days` : "No Date" });
+                   }}
+                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-teal-600 outline-none bg-white"
+                >
+                  <option value="0">No specific date</option>
+                  {[...Array(31)].map((_, i) => (
+                    <option key={i + 1} value={i + 1}>{i + 1} Day{i !== 0 ? 's' : ''}</option>
+                  ))}
+                  {[45, 60, 90, 120, 180, 365].map(d => (
+                     <option key={d} value={d}>{d} Days</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                   Dashboard will automatically set due date to Today + this many days.
+                </p>
               </div>
               <div>
                 <label className="flex items-center gap-3 cursor-pointer">

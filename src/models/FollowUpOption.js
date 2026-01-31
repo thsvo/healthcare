@@ -19,6 +19,10 @@ const FollowUpOptionSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  days: {
+    type: Number,
+    default: 0,
+  },
 }, {
   timestamps: true,
 });

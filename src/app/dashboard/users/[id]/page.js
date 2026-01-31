@@ -167,6 +167,13 @@ export default function PatientDetailPage() {
   const [showEditUserModal, setShowEditUserModal] = useState(false);
   const [showSlideMenu, setShowSlideMenu] = useState(false);
 
+  // Care Plan Modal state
+  const [showCarePlanModal, setShowCarePlanModal] = useState(false);
+  const [carePlanForm, setCarePlanForm] = useState({
+    followUpOptionId: "",
+    refillReminderOptionId: "",
+  });
+
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -1438,6 +1445,12 @@ export default function PatientDetailPage() {
                   </svg>
                   Care Plan Status
                 </h3>
+                <button
+                  onClick={() => openCarePlanModal()}
+                  className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded transition-colors"
+                >
+                  Edit
+                </button>
               </div>
               <div className="p-4 space-y-3">
                 {/* Follow Up */}
@@ -3421,6 +3434,89 @@ export default function PatientDetailPage() {
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
                   Add Treatment
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      
+
+
+      {/* Care Plan Modal */}
+      {showCarePlanModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-md">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Update Care Plan</h3>
+              <button
+                onClick={closeCarePlanModal}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={handleCarePlanSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Schedule Follow Up
+                </label>
+                <select
+                  value={carePlanForm.followUpOptionId}
+                  onChange={(e) => setCarePlanForm({ ...carePlanForm, followUpOptionId: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-teal-600 outline-none bg-white"
+                >
+                  <option value="">-- Select Follow Up --</option>
+                  {followUpOptions.filter(o => o.isActive).map(option => (
+                    <option key={option._id} value={option._id}>
+                      {option.name} {option.days > 0 ? `(${option.days} days)` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Schedule Refill Reminder
+                </label>
+                <select
+                  value={carePlanForm.refillReminderOptionId}
+                  onChange={(e) => setCarePlanForm({ ...carePlanForm, refillReminderOptionId: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-teal-600 outline-none bg-white"
+                >
+                  <option value="">-- Select Refill Reminder --</option>
+                  {refillReminderOptions.filter(o => o.isActive).map(option => (
+                    <option key={option._id} value={option._id}>
+                      {option.name} {option.days > 0 ? `(${option.days} days)` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800">
+                 <p className="flex gap-2">
+                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 flex-shrink-0">
+                     <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                   </svg>
+                   Selecting an option will automatically calculate and set the due date starting from today.
+                 </p>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closeCarePlanModal}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                >
+                  Update Plan
                 </button>
               </div>
             </form>

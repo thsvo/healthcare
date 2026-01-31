@@ -22,7 +22,7 @@ export async function POST(request) {
   try {
     await dbConnect();
     const body = await request.json();
-    const { name, description, order, isActive } = body;
+    const { name, description, order, isActive, days } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -36,6 +36,7 @@ export async function POST(request) {
       description,
       order: order || 0,
       isActive: isActive !== undefined ? isActive : true,
+      days: days || 0,
     });
 
     return NextResponse.json({ success: true, data: newOption }, { status: 201 });
@@ -59,7 +60,7 @@ export async function PUT(request) {
   try {
     await dbConnect();
     const body = await request.json();
-    const { id, name, description, order, isActive } = body;
+    const { id, name, description, order, isActive, days } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -70,7 +71,7 @@ export async function PUT(request) {
 
     const updatedOption = await RefillReminderOption.findByIdAndUpdate(
       id,
-      { name, description, order, isActive },
+      { name, description, order, isActive, days: days || 0 },
       { new: true, runValidators: true }
     );
 
