@@ -1029,6 +1029,17 @@ export default function PatientDetailPage() {
       grouped[categoryId].push(answer);
     });
     
+    // Sort answers: Active items first, Discontinued items last
+    Object.keys(grouped).forEach(categoryId => {
+      grouped[categoryId].sort((a, b) => {
+        // If one is discontinued and the other isn't, discontinued goes last
+        if (a.discontinued && !b.discontinued) return 1;
+        if (!a.discontinued && b.discontinued) return -1;
+        // Otherwise keep original order
+        return 0;
+      });
+    });
+    
     return grouped;
   };
 
@@ -1180,15 +1191,18 @@ export default function PatientDetailPage() {
 
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold text-gray-900">Patient Data</h3>
-            <button
-              onClick={() => openAddModal(null)}
-              className="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 flex items-center gap-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              Add Data
-            </button>
+            <div className="flex gap-2">
+              
+              <button
+                onClick={() => openAddModal(null)}
+                className="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Add Data
+              </button>
+            </div>
           </div>
 
           {/* Survey Answers by Category */}
@@ -1249,12 +1263,23 @@ export default function PatientDetailPage() {
                   const answerText = answerContent.replace(/<[^>]*>/g, ''); // Strip HTML for length check
                   const shouldShowToggle = answerText.length > 100;
 
+                  const isCurrentMedication = getCategoryName(categoryId) === 'Current Medication';
+
                   return (
-                  <div key={idx} className={`p-4 flex justify-between group relative ${answer.discontinued ? 'bg-red-50 border-l-4 border-l-red-400' : ''}`}>
+                  <div 
+                    key={idx} 
+                    className={`p-4 flex justify-between group relative ${answer.discontinued ? 'bg-red-50 border-l-4 border-l-red-400' : ''} ${isCurrentMedication ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+                    onClick={() => {
+                        if (isCurrentMedication && user?.surveyResponseId) {
+                            setViewingSubmission(user.surveyResponseId);
+                            setIsSubmissionExpanded(false);
+                        }
+                    }}
+                  >
                     <div className="flex-1 min-w-0 pr-4">
                       {/* Action Buttons - Top Right (Admin & Doctor Only) */}
                       {(currentUser?.role === 'admin' || currentUser?.role === 'doctor') && !answer.discontinued && !answer.isLocked && (
-                        <div className="float-right flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                        <div className="float-right flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => openEditModal(answer)}
                             className="p-1.5 text-teal-600 hover:text-teal-800 hover:bg-teal-50 rounded transition-colors"
@@ -1302,34 +1327,108 @@ export default function PatientDetailPage() {
                         )}
                       </div>
 
-                      {/* Question and Answer */}
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className={`text-sm text-gray-500 flex-1 ${answer.discontinued ? 'line-through' : ''}`}>
-                          {answer.questionText}
-                        </p>
-                        {shouldShowToggle && (
-                          <button
-                            onClick={() => toggleItem(itemId)}
-                            className="text-teal-600 hover:text-teal-700 transition-colors p-1 flex-shrink-0"
-                            title={isExpanded ? 'Collapse' : 'Expand'}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={2.5}
-                              stroke="currentColor"
-                              className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
-                      <div
-                        className={`quill-content break-words overflow-wrap-anywhere ${!isExpanded && shouldShowToggle ? 'line-clamp-2' : ''} ${answer.discontinued ? 'opacity-60 line-through' : ''}`}
-                        dangerouslySetInnerHTML={{ __html: answerContent }}
-                      />
+                      {/* Content */}
+                      {isCurrentMedication ? (
+                        <div>
+                            <div className={`text-sm text-gray-800 ${answer.discontinued ? 'line-through opacity-60' : ''}`}>
+                                <span className="font-medium text-gray-500">{answer.questionText}</span>
+                                <span className="mx-1 text-gray-400">/</span>
+                                <span dangerouslySetInnerHTML={{ __html: answerText }} />
+                            </div>
+                            
+                            <div className="mt-1 text-xs text-gray-500 flex items-center gap-3">
+                                {/* Follow Up Status */}
+                                {user?.followUpDate && (() => {
+                                    const target = new Date(user.followUpDate);
+                                    const now = new Date();
+                                    const diffTime = target - now;
+                                    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                    
+                                    let statusText = `${days} days`;
+                                    let colorClass = "";
+                                    
+                                    if (days < 0) {
+                                        statusText = `${Math.abs(days)} days overdue`;
+                                        colorClass = "text-red-500 font-medium";
+                                    } else if (days <= 3) {
+                                        if (days === 0) statusText = "Due today";
+                                        else statusText = `${days} days`;
+                                        colorClass = "text-orange-600 font-medium";
+                                    }
+
+                                    return (
+                                        <span>
+                                            Follow Up: <span className={colorClass}>{statusText}</span>
+                                        </span>
+                                    );
+                                })()}
+
+                                {/* Divider if both exist */}
+                                {user?.followUpDate && user?.refillReminderDate && (
+                                    <span className="text-gray-300">|</span>
+                                )}
+
+                                {/* Refill Status */}
+                                {user?.refillReminderDate && (() => {
+                                    const target = new Date(user.refillReminderDate);
+                                    const now = new Date();
+                                    const diffTime = target - now;
+                                    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                    
+                                    let statusText = `${days} days`;
+                                    let colorClass = "";
+                                    
+                                    if (days < 0) {
+                                        statusText = `${Math.abs(days)} days overdue`;
+                                        colorClass = "text-red-500 font-medium";
+                                    } else if (days <= 3) {
+                                        if (days === 0) statusText = "Due today";
+                                        else statusText = `${days} days`;
+                                        colorClass = "text-orange-600 font-medium";
+                                    }
+
+                                    return (
+                                        <span>
+                                            Refills: <span className={colorClass}>{statusText}</span>
+                                        </span>
+                                    );
+                                })()}
+                            </div>
+                        </div>
+                      ) : (
+                        <>
+                            <div className="flex items-center gap-2 mb-1">
+                                <p className={`text-sm text-gray-500 flex-1 ${answer.discontinued ? 'line-through' : ''}`}>
+                                {answer.questionText}
+                                </p>
+                                {shouldShowToggle && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleItem(itemId);
+                                    }}
+                                    className="text-teal-600 hover:text-teal-700 transition-colors p-1 flex-shrink-0"
+                                    title={isExpanded ? 'Collapse' : 'Expand'}
+                                >
+                                    <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={2.5}
+                                    stroke="currentColor"
+                                    className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                    >
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                    </svg>
+                                </button>
+                                )}
+                            </div>
+                            <div
+                                className={`quill-content break-words overflow-wrap-anywhere ${!isExpanded && shouldShowToggle ? 'line-clamp-2' : ''} ${answer.discontinued ? 'opacity-60 line-through' : ''}`}
+                                dangerouslySetInnerHTML={{ __html: answerContent }}
+                            />
+                        </>
+                      )}
 
                       {/* Prescription Details */}
                       {answer.isPrescription && answer.prescriptionDetails && (
@@ -2578,7 +2677,7 @@ export default function PatientDetailPage() {
                         Clinical Updates
                     </h5>
                      <div className="bg-blue-50/50 rounded-lg p-4 border border-blue-100">
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                         <div className="grid grid-cols-2 gap-4 mb-4">
                            <div>
                               <label className="block text-xs font-medium text-gray-500 mb-1">Follow Up</label>
                               <select
